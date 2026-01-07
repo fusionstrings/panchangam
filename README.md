@@ -1,44 +1,20 @@
 # Panchangam (Wasm)
 
-> **High-Precision Vedic Astrology & Calendar Library**
->
-> _Powered by Swiss Ephemeris | Compiled to WebAssembly | Built for the Edge_
+Vedic Astrology and Calendar library backed by Swiss Ephemeris, compiled to
+WebAssembly for edge/serverless environments.
 
-## 🌟 Why Panchangam?
+## Features
 
-Most Vedic astrology libraries rely on static lookup tables or simplified
-algorithms that trade accuracy for speed. **Panchangam** bridges the gap between
-ancient Vedic requirements and modern astronomical precision.
-
-1. **Astronomical Precision ("Drik Ganita")**: We wrap the industry-standard
-   **Swiss Ephemeris** (used by NASA/JPL) to calculate planetary positions to
-   millisecond precision. No approximations.
-2. **The "Udaya Tithi" Standard**: In Vedic traditions, the day doesn't start at
-   midnight; it starts at **Sunrise**. We calculate exact local sunrise times
-   (taking atmospheric refraction and altitude into account) to determine the
-   correct Tithi, Nakshatra, and Yoga for any location on Earth.
-3. **Wasm-First Performance**: Written in **Rust** and compiled to
-   **WebAssembly**, this library runs with near-native performance in
-   **Node.js**, **Deno**, and **Cloudflare Workers**. It's designed for
-   serverless scalability.
-
-## ✨ Features
-
-- **Swiss Ephemeris v2.10.03**: The gold standard for planetary calculations.
-- **Vedic Calendar (Panchang)**:
-  - **Tithi**: Lunar day (1-30) with end times calculated via iterative binary
-    search.
-  - **Nakshatra**: 27 Lunar mansions.
-  - **Yoga**: 27 Luni-solar combinations.
-  - **Karana**: 11 Half-Tithis.
-  - **Vara**: Weekday based on sunrise-to-sunrise logic.
-- **Advanced Astronomy**:
-  - **True Ayanamsa**: Support for **Lahiri (Chitrapaksha)**, Raman,
-    Krishnamurti, and more.
-  - **Planetary War (Graha Yuddha)**: Detects when planets are dangerously close
-    (< 1°).
-  - **Muhurat**: Real-time calculation of Rahu Kalam, Yamaganda, and Gulika
-    (8-part day division).
+- **Swiss Ephemeris v2.10.03**: Powered by the `swisseph-wasm` crate.
+- **Wasm-First**: Built for Deno, Node.js, and Cloudflare Workers.
+- **Vedic Calendar**:
+  - Root-finding (binary search) for exact Tithi, Nakshatra, Yoga end times.
+  - Sunrise/Sunset calculations via SPA (Solar Position Algorithm).
+- **Astronomy**:
+  - Sidereal/Tropical conversions.
+  - High-precision planetary positions (vsop87/jpl).
+  - Graha Yuddha (Planetary War) detection.
+- **Muhurat**: Dynamic calculation of Rahu Kalam, Yamaganda, Gulika.
 
 ## 🚀 Usage
 
@@ -124,8 +100,19 @@ if (conflicts.length > 0) {
 Run the Deno-based verification suite:
 
 ```bash
-deno test --allow-read --allow-env
+deno task build
 ```
+
+This command:
+
+1. Compiles the Rust crate and links the `swisseph-wasm` dependency.
+2. Generates the Wasm binary and JS bindings in `lib/`.
+
+## 📂 Project Structure
+
+- `src/lib.rs`: `panchangam` Wasm entry point.
+- `src/vedic/`: Core Vedic logic.
+- `examples/`: TypeScript verification scripts.
 
 ## License
 
