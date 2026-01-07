@@ -1,130 +1,114 @@
-name: CI/CD
+name: CI
 
 on:
   push:
     branches: ["creation"]
   pull_request:
     branches: ["creation"]
-  workflow_dispatch:
+  release:
+    types: [created]
 
 permissions:
   contents: read
-  id-token: write # For JSR publishing
+  id-token: write
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Git Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install Deno
+      - name: Setup Deno
         uses: denoland/setup-deno@v1
         with:
           deno-version: v2.x
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
+          targets: wasm32-unknown-unknown
 
-      - name: Install Clang
-        run: sudo apt-get update && sudo apt-get install -y clang lld
+      - name: Install LLVM (Clang)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm clang
 
-      - name: Build Wasm
+      - name: Build WASM
         run: deno task build
-
-      - name: Integration Tests
-        run: deno test -A tests/core.test.ts
-
-      - name: Build Swisseph Wasm (Standalone)
-        run: |
-          cd swisseph-wasm
-          deno task build
-
-  publish-crates:
-    needs: build-and-test
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
-      
-      - name: Install Clang
-        run: sudo apt-get update && sudo apt-get install -y clang lld
-
-      - name: Publish swisseph-wasm
         env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          if [ -n "$CARGO_REGISTRY_TOKEN" ]; then
-            cd swisseph-wasm
-            cargo publish --allow-dirty || echo "Generic publish failure"
-          else
-            echo "Skipping crates.io publish (no token)"
-          fi
+          CC: clang
 
-      - name: Publish panchangam
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          if [ -n "$CARGO_REGISTRY_TOKEN" ]; then
-            cargo publish --allow-dirty || echo "Generic publish failure"
-          else
-            echo "Skipping crates.io publish (no token)"
-          fi
+      - name: Run Tests
+        run: deno task test
 
-  publish-jsr:
-    needs: build-and-test
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+      - name: Run Benchmarks
+        run: deno task bench
+
+      - name: Build NPM Package
+        run: deno task build:npm
+
+      - name: Check Version Consistency
+        run: deno task check-version
+
+      - name: Verify Artifacts
+        run: |
+          test -f lib/panchangam.js
+          test -f npm/package.json
+          test -f npm/panchangam.js
+
+  publish:
+    name: Publish
+    if: github.event_name == 'release' && github.event.action == 'created'
     runs-on: ubuntu-latest
+    needs: build
     permissions:
       contents: read
       id-token: write
+
     steps:
-      - name: Checkout
+      - name: Git Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install Deno
+      - name: Setup Deno
         uses: denoland/setup-deno@v1
         with:
           deno-version: v2.x
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
-          
-      - name: Install Clang
-        run: sudo apt-get update && sudo apt-get install -y clang lld
+          targets: wasm32-unknown-unknown
 
-      - name: Publish swisseph-wasm to JSR
+      - name: Install LLVM
         run: |
-          cd swisseph-wasm
-          deno task build
-          npx jsr publish --allow-dirty || echo "JSR publish skipped/failed"
+          sudo apt-get update
+          sudo apt-get install -y llvm clang
 
-      - name: Publish panchangam to JSR
+      - name: Build Artifacts
         run: |
           deno task build
-          npx jsr publish --allow-dirty || echo "JSR publish skipped/failed"
+          deno task build:npm
+        env:
+          CC: clang
+
+      - name: Check Version Consistency
+        run: deno task check-version
+
+      - name: Publish to Crates.io
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish to JSR
+        run: deno publish --allow-dirty
+
+      - name: Publish to NPM
+        run: |
+          cd npm
+          npm config set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
+          npm publish --access public

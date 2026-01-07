@@ -5,7 +5,7 @@ WebAssembly for edge/serverless environments.
 
 ## Features
 
-- **Swiss Ephemeris v2.10.03**: C library statically linked via `swisseph-wasm`.
+- **Swiss Ephemeris v2.10.03**: Powered by the `swisseph-wasm` crate.
 - **Wasm-First**: Built for Deno, Node.js, and Cloudflare Workers.
 - **Vedic Calendar**:
   - Root-finding (binary search) for exact Tithi, Nakshatra, Yoga end times.
@@ -95,13 +95,11 @@ deno task build
 
 This command:
 
-1. Compiles the Swiss Ephemeris C source inside `swisseph-wasm`.
-2. Compiles the Rust crate and links the C library.
-3. Generates the Wasm binary and JS bindings in `lib/`.
+1. Compiles the Rust crate and links the `swisseph-wasm` dependency.
+2. Generates the Wasm binary and JS bindings in `lib/`.
 
 ## 📂 Project Structure
 
-- `swisseph-wasm/`: Core Swiss Ephemeris bindings & C source.
 - `src/lib.rs`: `panchangam` Wasm entry point.
 - `src/vedic/`: Core Vedic logic.
 - `examples/`: TypeScript verification scripts.

@@ -1,8 +1,0 @@
-{
-  "name": "@fusionstrings/swisseph-wasm",
-  "version": "0.1.0",
-  "exports": "./lib/swisseph_wasm.js",
-  "tasks": {
-    "build": "deno run -A jsr:@deno/wasmbuild"
-  }
-}

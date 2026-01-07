@@ -1,7 +1,11 @@
 {
   "tasks": {
-    "build": "CC_wasm32_unknown_unknown=\"/opt/homebrew/opt/llvm/bin/clang\" AR_wasm32_unknown_unknown=\"/opt/homebrew/opt/llvm/bin/llvm-ar\" CFLAGS_wasm32_unknown_unknown=\"-I/opt/homebrew/opt/llvm/lib/clang/21/include\" deno run -A jsr:@deno/wasmbuild -p panchangam",
-    "build:inline": "CC_wasm32_unknown_unknown=\"/opt/homebrew/opt/llvm/bin/clang\" AR_wasm32_unknown_unknown=\"/opt/homebrew/opt/llvm/bin/llvm-ar\" CFLAGS_wasm32_unknown_unknown=\"-I/opt/homebrew/opt/llvm/lib/clang/21/include\" deno run -A jsr:@deno/wasmbuild --inline -p panchangam"
+    "build": "deno run -A jsr:@deno/wasmbuild -p panchangam",
+    "build:inline": "deno run -A jsr:@deno/wasmbuild --inline -p panchangam",
+    "build:npm": "deno run -A scripts/build_npm.ts",
+    "check-version": "deno run -A scripts/check_version.ts",
+    "test": "deno test -A",
+    "bench": "deno bench -A"
   },
   "name": "@fusionstrings/panchangam",
   "version": "0.1.0",
