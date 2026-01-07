@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["creation"]
+    branches: ["creation", "swisseph-wasm"]
   pull_request:
-    branches: ["creation"]
+    branches: ["creation", "swisseph-wasm"]
   release:
     types: [created]
 
