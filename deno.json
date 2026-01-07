@@ -9,6 +9,7 @@
   },
   "name": "@fusionstrings/panchangam",
   "version": "0.1.0",
+  "license": "MIT",
   "exports": "./lib/panchangam.js",
   "imports": {
     "@std/assert": "jsr:@std/assert@1"
