@@ -1,108 +1,131 @@
 # Panchangam (Wasm)
 
-Vedic Astrology and Calendar library backed by Swiss Ephemeris, compiled to
-WebAssembly for edge/serverless environments.
+> **High-Precision Vedic Astrology & Calendar Library**
+>
+> _Powered by Swiss Ephemeris | Compiled to WebAssembly | Built for the Edge_
 
-## Features
+## 🌟 Why Panchangam?
 
-- **Swiss Ephemeris v2.10.03**: Powered by the `swisseph-wasm` crate.
-- **Wasm-First**: Built for Deno, Node.js, and Cloudflare Workers.
-- **Vedic Calendar**:
-  - Root-finding (binary search) for exact Tithi, Nakshatra, Yoga end times.
-  - Sunrise/Sunset calculations via SPA (Solar Position Algorithm).
-- **Astronomy**:
-  - Sidereal/Tropical conversions.
-  - High-precision planetary positions (vsop87/jpl).
-  - Graha Yuddha (Planetary War) detection.
-- **Muhurat**: Dynamic calculation of Rahu Kalam, Yamaganda, Gulika.
+Most Vedic astrology libraries rely on static lookup tables or simplified
+algorithms that trade accuracy for speed. **Panchangam** bridges the gap between
+ancient Vedic requirements and modern astronomical precision.
 
-## 📦 Usage
+1. **Astronomical Precision ("Drik Ganita")**: We wrap the industry-standard
+   **Swiss Ephemeris** (used by NASA/JPL) to calculate planetary positions to
+   millisecond precision. No approximations.
+2. **The "Udaya Tithi" Standard**: In Vedic traditions, the day doesn't start at
+   midnight; it starts at **Sunrise**. We calculate exact local sunrise times
+   (taking atmospheric refraction and altitude into account) to determine the
+   correct Tithi, Nakshatra, and Yoga for any location on Earth.
+3. **Wasm-First Performance**: Written in **Rust** and compiled to
+   **WebAssembly**, this library runs with near-native performance in
+   **Node.js**, **Deno**, and **Cloudflare Workers**. It's designed for
+   serverless scalability.
+
+## ✨ Features
+
+- **Swiss Ephemeris v2.10.03**: The gold standard for planetary calculations.
+- **Vedic Calendar (Panchang)**:
+  - **Tithi**: Lunar day (1-30) with end times calculated via iterative binary
+    search.
+  - **Nakshatra**: 27 Lunar mansions.
+  - **Yoga**: 27 Luni-solar combinations.
+  - **Karana**: 11 Half-Tithis.
+  - **Vara**: Weekday based on sunrise-to-sunrise logic.
+- **Advanced Astronomy**:
+  - **True Ayanamsa**: Support for **Lahiri (Chitrapaksha)**, Raman,
+    Krishnamurti, and more.
+  - **Planetary War (Graha Yuddha)**: Detects when planets are dangerously close
+    (< 1°).
+  - **Muhurat**: Real-time calculation of Rahu Kalam, Yamaganda, and Gulika
+    (8-part day division).
+
+## 🚀 Usage
 
 ### Installation
 
-Currently set up as a local crate. Build it first:
+This project is currently distributed as a source crate. You verify and build
+the Wasm bindings locally.
+
+**Prerequisites:**
+
+- [Rust](https://www.rust-lang.org/) (stable)
+- [Deno](https://deno.land/) (v1.37+)
+
+**One-Step Build:**
 
 ```bash
 deno task build
 ```
 
-This produces `lib/panchangam.js` and `lib/panchangam.wasm`.
+This generates:
 
-### Basic Example
+- `./lib/panchangam.js`: The ESM entry point.
+- `./lib/panchangam.wasm`: The compiled Wasm binary.
+- `./lib/panchangam.d.ts`: Fully typed TypeScript definitions.
+
+### Quick Start
 
 ```typescript
-import {
-  calculate_daily_panchang,
-  Location,
-  swe_calc_ut,
-  swe_julday,
-} from "./lib/panchangam.js";
+import { calculate_daily_panchang, Location } from "./lib/panchangam.js";
 
-// Location: Bangalore (12.97 N, 77.59 E)
-const loc = new Location(12.9716, 77.5946, 920.0);
+// 1. Define Location: Bangalore (12.97 N, 77.59 E, 920m altitude)
+const bangalore = new Location(12.9716, 77.5946, 920.0);
 
-// Calculate for Jan 5, 2026, using Lahiri Ayanamsha (mode 1)
-const result = calculate_daily_panchang(2026, 1, 5, loc, 1);
+// 2. Calculate for January 5, 2026
+// params: (year, month, day, location, ayanamsha_mode)
+// mode 1 = Lahiri (Chitrapaksha)
+const result = calculate_daily_panchang(2026, 1, 5, bangalore, 1);
 
-console.log("Tithi:", result.tithi_name);
-// Output: "Dwitiya"
-
+// 3. Output Results
+console.log(`Date: ${result.date}`);
+console.log(`Sunrise: ${new Date(result.sunrise).toLocaleTimeString()}`);
 console.log(
-  "Nakshatra Ends:",
-  new Date(result.nakshatra_end_time).toISOString(),
+  `Tithi: ${result.tithi_name} (Ends at ${
+    new Date(result.tithi_end_time).toLocaleTimeString()
+  })`,
 );
-// Output: "2026-01-05T07:54:53.000Z"
+console.log(`Nakshatra: ${result.nakshatra_name}`);
 ```
 
-### Muhurats (Time Qualities)
-
-```typescript
-const m = result.muhurats;
-console.log(`Rahu Kalam: ${new Date(m.rahu_kalam.start).toLocaleTimeString()}`);
-```
-
-### Planetary War
+### Advanced: Planetary War
 
 ```typescript
 import { check_graha_yuddha, swe_julday } from "./lib/panchangam.js";
 
-const jd = swe_julday(2024, 2, 22, 12.0, 1);
-const wars = check_graha_yuddha(jd, 1); // 1 = Lahiri
+const jd = swe_julday(2026, 1, 6, 12.0, 1); // Jan 6, 2026
+const conflicts = check_graha_yuddha(jd, 1);
 
-if (wars.length > 0) {
-  console.log(`${wars[0].planet1_name} fights ${wars[0].planet2_name}!`);
-  console.log(
-    `Winner: ${
-      wars[0].winner_id === wars[0].planet1_id
-        ? wars[0].planet1_name
-        : wars[0].planet2_name
-    }`,
-  );
+if (conflicts.length > 0) {
+  conflicts.forEach((war) => {
+    console.warn(
+      `⚔️ PLANETARY WAR: ${war.planet1_name} vs ${war.planet2_name}`,
+    );
+    console.log(
+      `Winner: ${
+        war.winner_id === war.planet1_id ? war.planet1_name : war.planet2_name
+      }`,
+    );
+  });
 }
 ```
 
-## 🛠️ Build
+## 🛠️ Development
 
-Requirements:
+### Project Structure
 
-- **Rust** (stable)
-- **Deno**
-- **Clang/LLVM** (for compiling Swiss Ephemeris C code)
+- **`src/lib.rs`**: Wasm entry point (exposes functions to JS).
+- **`src/vedic/`**: Core Vedic algorithms (Tithi, Nakshatra, etc.).
+- **`src/astronomy/`**: Swiss Ephemeris wrappers and solvers.
+- **`scripts/build_npm.ts`**: Build script to generate NPM/Deno package.
+
+### Testing
+
+Run the Deno-based verification suite:
 
 ```bash
-deno task build
+deno test --allow-read --allow-env
 ```
-
-This command:
-
-1. Compiles the Rust crate and links the `swisseph-wasm` dependency.
-2. Generates the Wasm binary and JS bindings in `lib/`.
-
-## 📂 Project Structure
-
-- `src/lib.rs`: `panchangam` Wasm entry point.
-- `src/vedic/`: Core Vedic logic.
-- `examples/`: TypeScript verification scripts.
 
 ## License
 

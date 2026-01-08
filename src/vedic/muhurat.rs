@@ -2,22 +2,30 @@ use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use alloc::string::{String, ToString};
 
+/// Represents a specific time interval (Muhurat)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[wasm_bindgen]
 pub struct Muhurat {
+    /// Name of the Muhurat (e.g., "Rahu Kalam")
     #[wasm_bindgen(getter_with_clone)]
     pub name: String,
-    pub start: f64, // Unix ms
-    pub end: f64,   // Unix ms
+    /// Start time in Unix milliseconds
+    pub start: f64,
+    /// End time in Unix milliseconds
+    pub end: f64,
 }
 
+/// Collection of daily Muhurats
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[wasm_bindgen]
 pub struct DayMuhurats {
+    /// Period of Raahu (Inauspicious for starting new ventures)
     #[wasm_bindgen(getter_with_clone)]
     pub rahu_kalam: Muhurat,
+    /// Period of Yama (Inauspicious)
     #[wasm_bindgen(getter_with_clone)]
     pub yamaganda: Muhurat,
+    /// Period of Gulika (Neutral/Inauspicious)
     #[wasm_bindgen(getter_with_clone)]
     pub gulika: Muhurat,
     // Add Durmuhurat, Abhijit later if needed

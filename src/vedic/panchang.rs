@@ -11,39 +11,72 @@ use alloc::string::String;
 #[wasm_bindgen]
 pub struct DailyPanchang {
     // Times
-    pub sunrise: f64, // Unix ms
-    pub sunset: f64,  // Unix ms
+    /// Sunrise time in Unix milliseconds
+    pub sunrise: f64,
+    /// Sunset time in Unix milliseconds
+    pub sunset: f64,
     
     // Tithi
+    /// Tithi index (1-30). 15 = Purnima, 30 = Amavasya.
     pub tithi_index: u8,
+    /// Name of the Tithi (e.g., "Shukla-Chaturdashi")
     #[wasm_bindgen(getter_with_clone)]
     pub tithi_name: String,
-    pub tithi_end_time: Option<f64>, // Unix ms
+    /// Timestamp (Unix ms) when this Tithi ends. None if it doesn't end today.
+    pub tithi_end_time: Option<f64>,
 
     // Nakshatra
+    /// Nakshatra index (1-27). 1 = Ashwini.
     pub nakshatra_index: u8,
+    /// Name of the Nakshatra (e.g., "Krittika")
     #[wasm_bindgen(getter_with_clone)]
     pub nakshatra_name: String,
-    pub nakshatra_end_time: Option<f64>, // Unix ms
+    /// Timestamp (Unix ms) when this Nakshatra ends.
+    pub nakshatra_end_time: Option<f64>,
     
     // Yoga
+    /// Yoga index (1-27).
     pub yoga_index: u8,
+    /// Name of the Yoga (e.g., "Vishkumbha")
     #[wasm_bindgen(getter_with_clone)]
     pub yoga_name: String,
-    pub yoga_end_time: Option<f64>, // Unix ms
+    /// Timestamp (Unix ms) when this Yoga ends.
+    pub yoga_end_time: Option<f64>,
 
     // Vara
+    /// Solar Weekday name (e.g., "Adityawara")
     #[wasm_bindgen(getter_with_clone)]
     pub vara_name: String,
     
     // Config
+    /// The Ayanamsha value (in degrees) used for calculations
     pub ayanamsha_value: f64,
     
     // Muhurat
+    /// Auspicious and Inauspicious time periods for the day
     #[wasm_bindgen(getter_with_clone)]
     pub muhurats: muhurat::DayMuhurats,
 }
 
+/// Calculate the complete Panchangam for a given date and location.
+///
+/// This function performs the following steps:
+/// 1. Calculates exact local Sunrise and Sunset times.
+/// 2. Determines the Ayanamsha (precession) based on the selected mode.
+/// 3. Computes the 5 Angas (Tithi, Nakshatra, Yoga, Karana, Vara) at the moment of Sunrise.
+/// 4. Iteratively finds the end times for Tithi, Nakshatra, and Yoga using binary search.
+/// 5. Calculates daily Muhurats (Rahu Kalam, Yamaganda, etc.) based on day division.
+///
+/// # Arguments
+/// * `year` - Year (e.g., 2026)
+/// * `month` - Month (1-12)
+/// * `day` - Day of month (1-31)
+/// * `location` - The geographical location of the observer
+/// * `ayan_mode` - Ayanamsha mode:
+///     * 1 = Lahiri (Chitrapaksha) [Default/Standard]
+///     * 3 = Raman
+///     * 5 = Krishnamurti
+///     * 27 = True Chitrapaksha
 #[wasm_bindgen]
 pub fn calculate_daily_panchang(
     year: i32, 
