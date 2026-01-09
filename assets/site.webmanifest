@@ -1,0 +1,15 @@
+{
+  "name": "Panchangam",
+  "short_name": "Panchangam",
+  "description": "High-precision Vedic Panchangam & Astronomy Library",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#1F1F3D",
+  "background_color": "#FFFFFF",
+  "display": "standalone"
+}
