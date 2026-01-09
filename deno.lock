@@ -1582,6 +1582,7 @@
     "https://deno.land/x/fresh@1.7.3/src/build/mod.ts": "b9d1695a86746ac3a1c52f0e07e723faa2310d1dfd109b9a2eebab6727c4702b",
     "https://deno.land/x/fresh@1.7.3/src/constants.ts": "4795d194b6c6b95f0e876c0a997fbaf57f94cfe253442c5819f95410870b79b3",
     "https://deno.land/x/fresh@1.7.3/src/dev/build.ts": "9aaf84a781ee4d11d73ec549425f273fe8339812fdd8f726e1ec1ba61bdf0e9d",
+    "https://deno.land/x/fresh@1.7.3/src/dev/cli.ts": "507892e303c0fc5aef9933b2066f8e220c26a51566c5e43c3b51053757afed44",
     "https://deno.land/x/fresh@1.7.3/src/dev/deps.ts": "93af624becfb2d8497e3d7ef0cf5ef48df61495dc5951b5f922c6a129a9fb75c",
     "https://deno.land/x/fresh@1.7.3/src/dev/dev_command.ts": "3e3dcc80180faf8868d44d892ddfa8c5ad06033e4d94c0934302e157db1de63d",
     "https://deno.land/x/fresh@1.7.3/src/dev/error.ts": "21a38d240c00279662e6adde41367f1da0ae7e2836d993f818ea94aabab53e7b",

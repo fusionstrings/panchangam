@@ -14,7 +14,7 @@ export default function App({ Component }: PageProps) {
           crossOrigin="true"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap"
           rel="stylesheet"
         />
       </head>

@@ -7,43 +7,46 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Vedic Futurism Palette
-        void: "#050A14",
-        "void-deep": "#020408",
-        paper: "#F0F4F8",
+        // Horological Mysticism Palette (Strict)
+        void: "#050505", // Void Black
+        primary: "#E5E5E5", // Off-White / Cream
+        "tech-amber": "#EFBF04", // The new Primary Accent (Gold/Amber)
+        "tech-blue": "#EFBF04", // ALIASED TO GOLD for instant component fixes (User requested NO BLUE)
+        "burnt-saffron": "#FF5722", // Alerts / Primary CTA
+        "grid-line": "rgba(255, 255, 255, 0.08)",
 
-        // Tech & Schematics
-        blueprint: "rgba(0, 240, 255, 0.15)",
-        "blueprint-dim": "rgba(0, 240, 255, 0.05)",
-        whiteline: "rgba(255, 255, 255, 0.1)",
+        // Semantic Mappings
+        background: "#050505",
+        headline: "#E5E5E5",
+        paragraph: "#A3A3A3",
 
-        // Accents
-        "saffron-tech": "#F59E0B",
-        "saffron-glow": "rgba(245, 158, 11, 0.4)",
-        "saffron-dim": "#C27803",
-        "terminal-green": "#10B981",
-        "alert-red": "#EF4444",
-
-        // Legacy/Fallback mapping
-        background: "#050A14",
-        headline: "#ffffff",
-        paragraph: "#94a3b8",
-        button: "#F59E0B",
-        "button-text": "#ffffff",
+        // Legacy support
+        "saffron-tech": "#FF5722",
+        blueprint: "rgba(239, 191, 4, 0.15)", // Mapped to Amber alpha
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"], // Fallback if Neue Montreal isn't loaded
+        sans: ["Space Grotesk", "Montserrat", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
-        display: ["Oswald", "sans-serif"], // Brutalist header
+        display: ["Space Grotesk", "sans-serif"],
         body: ["Inter", "sans-serif"],
       },
       animation: {
         "spin-slow": "spin 60s linear infinite",
         "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "scan": "scan 2s linear infinite",
       },
-      backgroundImage: {
-        "grid-pattern":
-          "linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px)",
+      keyframes: {
+        scan: {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(100%)" },
+        },
+      },
+      cursor: {
+        "crosshair": "crosshair",
+        "wait": "wait",
+        "text": "text",
+        "move": "move",
+        "not-allowed": "not-allowed",
       },
     },
   },

@@ -9,3 +9,9 @@
 _fresh/
 # npm dependencies
 node_modules/
+
+# Fresh auto-generated files
+fresh.gen.ts
+
+# Generated documentation
+static/docs/
