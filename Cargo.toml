@@ -15,14 +15,14 @@ members = []
 
 [dependencies]
 swisseph-wasm = "0.1.4"
-wasm-bindgen = "0.2"
-js-sys = "0.3"
-chrono = { version = "0.4", features = ["serde"] }
-serde = { version = "1.0", features = ["derive"] }
-serde-wasm-bindgen = "0.6"
+wasm-bindgen = "0.2.105"
+js-sys = "0.3.82"
+chrono = { version = "0.4.42", features = ["serde"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
 spa = "0.5.1"
 # libc and libm were for internal C shims, potentially still needed for other reasons or can be removed if strictly delegation
-libc = "0.2"
+libc = "0.2.180"
 libm = "0.2.15"
 
 # Build dependencies are no longer needed for compilation of C code here, BUT 

@@ -1,15 +1,22 @@
 import { assertAlmostEquals, assertEquals } from "@std/assert";
 import {
   calculate_daily_panchang,
+  get_swisseph_version,
   get_version,
   Location,
   swe_calc_ut,
 } from "../lib/panchangam.js";
 
 Deno.test("Swiss Ephemeris Version", () => {
-  const ver = get_version();
+  const ver = get_swisseph_version();
   console.log(`Swiss Eph Version: ${ver}`);
   assertEquals(ver, "2.10.03");
+});
+
+Deno.test("Library Version", () => {
+  const ver = get_version();
+  console.log(`Panchangam Version: ${ver}`);
+  assertEquals(ver, "0.1.0");
 });
 
 Deno.test("Sunrise/Sunset Calculation", () => {

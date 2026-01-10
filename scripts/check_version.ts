@@ -1,5 +1,5 @@
-import { parse } from "jsr:@std/toml";
-import { assertEquals } from "jsr:@std/assert";
+import { parse } from "@std/toml";
+import { assertEquals } from "@std/assert";
 
 const textDecoder = new TextDecoder("utf-8");
 
@@ -10,7 +10,8 @@ async function checkVersion() {
   const cargoToml = parse(textDecoder.decode(cargoTomlRaw));
   const denoJson = JSON.parse(textDecoder.decode(denoJsonRaw));
 
-  const cargoVersion = (cargoToml as any).package.version;
+  const cargoVersion =
+    (cargoToml as { package: { version: string } }).package.version;
   const denoVersion = denoJson.version;
 
   console.log(`Cargo version: ${cargoVersion}`);

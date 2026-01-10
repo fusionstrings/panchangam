@@ -10,8 +10,30 @@
   "name": "@fusionstrings/panchangam",
   "version": "0.1.0",
   "license": "MIT",
-  "exports": "./lib/panchangam.js",
+  "exports": {
+    ".": "./lib/panchangam.js",
+    "./panchangam.wasm": "./lib/panchangam.wasm"
+  },
+  "publish": {
+    "include": [
+      "lib/panchangam.js",
+      "lib/panchangam.internal.js",
+      "lib/panchangam.d.ts",
+      "lib/panchangam.wasm",
+      "README.md",
+      "LICENSE",
+      "deno.json"
+    ]
+  },
+  "exclude": [
+    "target",
+    "npm",
+    "swisseph-wasm"
+  ],
   "imports": {
-    "@std/assert": "jsr:@std/assert@1"
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/toml": "jsr:@std/toml@1",
+    "@std/fs": "jsr:@std/fs@1",
+    "@deno/wasmbuild": "jsr:@deno/wasmbuild@0.20.0"
   }
 }

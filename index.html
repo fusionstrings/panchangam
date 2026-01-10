@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panchangam - Vedic Astronomy Terminal</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "panchangam": "./lib/panchangam.js"
+        }
+      }
+    </script>
+    <style>
+      :root {
+        --bg-primary: #0a0a0f;
+        --bg-secondary: #16161f;
+        --accent: #ff9d00;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --terminal-green: #00ff41;
+        --border: #2a2a33;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      .header {
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(45deg, var(--accent), #ff5e00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .header p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Panchangam Engine</h1>
+      <p>High-Precision Vedic Astronomy & Panchangam</p>
+    </div>
+
+    <live-terminal id="terminal">
+      <template shadowrootmode="open">
+        <style>
+          :host {
+            display: block;
+            width: 90vw;
+            max-width: 800px;
+            height: 500px;
+            background: #11111b;
+            border: 1px solid #2a2a33;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            overflow: hidden;
+            position: relative;
+          }
+
+          .terminal-header {
+            background: #1a1a24;
+            padding: 10px 15px;
+            border-bottom: 1px solid #2a2a33;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+
+          .dots {
+            display: flex;
+            gap: 8px;
+          }
+
+          .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+          }
+
+          .dot.red {
+            background: #ff5f56;
+          }
+          .dot.yellow {
+            background: #ffbd2e;
+          }
+          .dot.green {
+            background: #27c93f;
+          }
+
+          .terminal-title {
+            color: #7c7c8c;
+            font-size: 12px;
+          }
+
+          #output {
+            padding: 20px;
+            height: calc(100% - 90px);
+            overflow-y: auto;
+            color: #d1d1e0;
+            font-size: 14px;
+            line-height: 1.6;
+            scrollbar-width: thin;
+            scrollbar-color: #2a2a33 transparent;
+          }
+
+          #output::-webkit-scrollbar {
+            width: 6px;
+          }
+          #output::-webkit-scrollbar-thumb {
+            background: #2a2a33;
+            border-radius: 3px;
+          }
+
+          .prompt-line {
+            display: flex;
+            gap: 10px;
+            padding: 5px 20px;
+            background: #11111b;
+            border-top: 1px solid #2a2a33;
+          }
+
+          .prompt-symbol {
+            color: #00ff41;
+          }
+
+          #input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+          }
+
+          .version-tag {
+            color: #ff9d00;
+          }
+
+          .cmd-output {
+            margin-bottom: 15px;
+          }
+
+          .cmd-echo {
+            color: #7c7c8c;
+            margin-bottom: 5px;
+          }
+        </style>
+        <div class="terminal-header">
+          <div class="dots">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+          </div>
+          <div class="terminal-title">panchangam@wasm: ~</div>
+          <div></div>
+        </div>
+        <div id="output">
+          <div class="cmd-output">
+            Welcome to <span class="version-tag"
+            >Panchangam WASM v0.1.0</span><br>
+            Precision engine powered by Swiss Ephemeris.<br>
+            Type `help` to see available commands.
+          </div>
+        </div>
+        <div class="prompt-line">
+          <span class="prompt-symbol">❯</span>
+          <input type="text" id="input" autofocus>
+        </div>
+      </template>
+    </live-terminal>
+
+    <script type="module">
+      import * as panchangam from "panchangam";
+
+      class LiveTerminal extends HTMLElement {
+        constructor() {
+          super();
+          this.history = [];
+        }
+
+        connectedCallback() {
+          const root = this.shadowRoot;
+          const input = root.getElementById("input");
+          const output = root.getElementById("output");
+
+          input.addEventListener("keydown", async (e) => {
+            if (e.key === "Enter") {
+              const cmd = input.value.trim();
+              if (cmd) {
+                input.value = "";
+                await this.executeCommand(cmd, output);
+              }
+            }
+          });
+
+          // Auto-focus input on click anywhere in terminal
+          this.addEventListener("click", () => input.focus());
+
+          // WASM is already initialized in the inline build
+          this.appendOutput("✅ WASM Module Initialized", "system");
+          this.appendOutput(
+            `Engine: Swiss Ephemeris v${panchangam.get_swisseph_version()}`,
+            "system",
+          );
+        }
+
+        appendOutput(text, type = "normal") {
+          const output = this.shadowRoot.getElementById("output");
+          const div = document.createElement("div");
+          div.className = "cmd-output";
+          if (type === "system") div.style.color = "#7c7c8c";
+          div.innerHTML = text.replace(/\n/g, "<br>");
+          output.appendChild(div);
+          output.scrollTop = output.scrollHeight;
+        }
+
+        async executeCommand(cmd, output) {
+          const echo = document.createElement("div");
+          echo.className = "cmd-echo";
+          echo.textContent = `❯ ${cmd}`;
+          output.appendChild(echo);
+
+          try {
+            const result = await this.processCommand(cmd);
+            this.appendOutput(result);
+          } catch (err) {
+            this.appendOutput(`❌ Error: ${err.message}`, "error");
+          }
+        }
+
+        async processCommand(cmd) {
+          const [action, ...args] = cmd.split(" ");
+
+          switch (action.toLowerCase()) {
+            case "help":
+              return `Available commands:
+  - version: Show library versions
+  - sunrise [lat] [lon]: Calculate sunrise for Ayodhya (default)
+  - tithi: Calculate current Tithi
+  - clear: Clear terminal`;
+            case "version":
+              return `Panchangam: ${panchangam.get_version()}
+Swiss Ephemeris: ${panchangam.get_swisseph_version()}`;
+            case "tithi":
+              const jd = 2460331.791065; // Mocking JD for demo
+              const tithi = panchangam.calculate_tithi(jd);
+              const res =
+                `Tithi: ${tithi.name} (${tithi.paksha_name} Paksha)
+Completion: ${(tithi.completion * 100).toFixed(1)}%`;
+              tithi.free();
+              return res;
+            case "sunrise":
+              const loc = new panchangam.Location(26.7922, 82.1998, 0);
+              const sr = panchangam.calculate_sunrise(2024, 1, 22, loc);
+              const date = new Date(sr).toLocaleString();
+              loc.free();
+              return `Sunrise in Ayodhya: ${date}`;
+            case "clear":
+              this.shadowRoot.getElementById("output").innerHTML = "";
+              return "Terminal cleared.";
+            default:
+              return `Unknown command: ${action}. Type 'help' for assistance.`;
+          }
+        }
+      }
+
+      customElements.define("live-terminal", LiveTerminal);
+    </script>
+  </body>
+</html>

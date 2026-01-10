@@ -1,4 +1,4 @@
-import { ensureDir } from "jsr:@std/fs";
+import { ensureDir } from "@std/fs";
 
 async function buildNpm() {
   console.log("Building for Node.js (NPM)...");
@@ -31,7 +31,7 @@ async function buildNpm() {
         installedVersion = match[1];
       }
     }
-  } catch (e) {
+  } catch (_e) {
     // ignore
   }
 

@@ -1,13 +1,14 @@
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import {
   calculate_sunrise,
   calculate_tithi,
+  get_swisseph_version,
   get_version,
   Location,
 } from "../lib/panchangam.js";
 
 Deno.test("Swiss Ephemeris Version Check", () => {
-  const version = get_version();
+  const version = get_swisseph_version();
   console.log("Swiss Ephemeris Version:", version);
   // Version should be 2.10.something
   assertEquals(version.startsWith("2.10"), true);
