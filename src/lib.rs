@@ -31,9 +31,15 @@ pub mod vedic;
 pub mod geo;
 pub mod muhurat;
 
-/// Get the library version from Swiss Ephemeris
+/// Get the library version (panchangam)
 #[wasm_bindgen]
 pub fn get_version() -> String {
+    String::from(env!("CARGO_PKG_VERSION"))
+}
+
+/// Get the underlying Swiss Ephemeris engine version
+#[wasm_bindgen]
+pub fn get_swisseph_version() -> String {
     let mut buf = [0i8; 256];
     unsafe {
         swe_bindings::swe_version(buf.as_mut_ptr());
