@@ -1,0 +1,43 @@
+create another export to get version of swisseph, get_version must return 
+instead of using react/preact use web components and pure css based on declrative shadow dom. use the library as importmap.
+
+Run cargo publish --token ***
+  cargo publish --token ***
+  shell: /usr/bin/bash -e {0}
+  env:
+    CARGO_HOME: /home/runner/.cargo
+    CARGO_INCREMENTAL: 0
+    CARGO_TERM_COLOR: always
+warning: `cargo publish --token` is deprecated in favor of using `cargo login` and environment variables
+    Updating crates.io index
+error: 1 files in the working directory contain changes that were not yet committed into git:
+deno.lock
+to proceed despite this and include the uncommitted changes, pass the `--allow-dirty` flag
+Error: Process completed with exit code 101.
+2s
+Run deno publish --allow-dirty
+Check lib/panchangam.js
+Checking for slow types in the public API...
+Check lib/panchangam.js
+error[excluded-module]: module in package's module graph was excluded from publishing
+ --> /home/runner/work/panchangam/panchangam/lib/panchangam.d.ts
+  = hint: remove the module from 'exclude' and/or 'publish.exclude' in the config file or use 'publish.exclude' with a negative glob to unexclude from gitignore
+  info: excluded modules referenced via a package export will error at runtime due to not existing in the package
+  docs: https://jsr.io/go/excluded-module
+error[excluded-module]: module in package's module graph was excluded from publishing
+ --> /home/runner/work/panchangam/panchangam/lib/panchangam.internal.js
+  = hint: remove the module from 'exclude' and/or 'publish.exclude' in the config file or use 'publish.exclude' with a negative glob to unexclude from gitignore
+  info: excluded modules referenced via a package export will error at runtime due to not existing in the package
+  docs: https://jsr.io/go/excluded-module
+error[excluded-module]: module in package's module graph was excluded from publishing
+ --> /home/runner/work/panchangam/panchangam/lib/panchangam.js
+  = hint: remove the module from 'exclude' and/or 'publish.exclude' in the config file or use 'publish.exclude' with a negative glob to unexclude from gitignore
+  info: excluded modules referenced via a package export will error at runtime due to not existing in the package
+  docs: https://jsr.io/go/excluded-module
+error[excluded-module]: module in package's module graph was excluded from publishing
+ --> /home/runner/work/panchangam/panchangam/lib/panchangam.wasm
+  = hint: remove the module from 'exclude' and/or 'publish.exclude' in the config file or use 'publish.exclude' with a negative glob to unexclude from gitignore
+  info: excluded modules referenced via a package export will error at runtime due to not existing in the package
+  docs: https://jsr.io/go/excluded-module
+error: Found 4 problems
+Error: Process completed with exit code 1.
