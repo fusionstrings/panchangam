@@ -15,15 +15,25 @@ pub enum AyanamshaMode {
     Krishnamurti = 2,
     /// True Chitrapaksha
     TrueCitra = 27,
+    /// Fagan-Bradley
+    FaganBradley = 4, // Custom ID, doesn't matter as long as unique
 }
 
 impl AyanamshaMode {
     pub fn to_swe_mode(&self) -> i32 {
+        // Swiss Ephemeris sidereal mode constants (from swephexp.h)
+        const SE_SIDM_LAHIRI: i32 = 1;
+        const SE_SIDM_RAMAN: i32 = 3;
+        const SE_SIDM_KRISHNAMURTI: i32 = 5;
+        const SE_SIDM_TRUE_CITRA: i32 = 27;
+        const SE_SIDM_FAGAN_BRADLEY: i32 = 0;
+        
         match self {
-            AyanamshaMode::Lahiri => swe_bindings::SE_SIDM_LAHIRI as i32,
-            AyanamshaMode::Raman => swe_bindings::SE_SIDM_RAMAN as i32,
-            AyanamshaMode::Krishnamurti => swe_bindings::SE_SIDM_KRISHNAMURTI as i32,
-            AyanamshaMode::TrueCitra => swe_bindings::SE_SIDM_TRUE_CITRA as i32,
+            AyanamshaMode::Lahiri => SE_SIDM_LAHIRI,
+            AyanamshaMode::Raman => SE_SIDM_RAMAN,
+            AyanamshaMode::Krishnamurti => SE_SIDM_KRISHNAMURTI,
+            AyanamshaMode::TrueCitra => SE_SIDM_TRUE_CITRA,
+            AyanamshaMode::FaganBradley => SE_SIDM_FAGAN_BRADLEY,
         }
     }
 }

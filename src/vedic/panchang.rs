@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use crate::{Location, calculate_sunrise, calculate_sunset};
-use crate::vedic::{tithi, nakshatra, yoga, vara, muhurat};
+use crate::vedic::{tithi, nakshatra, yoga, vara, muhurat, karana};
 use crate::astronomy::{ayanamsha, solver};
 use crate::astronomy::planets::{self, PlanetId};
 use crate::astronomy::ayanamsha::AyanamshaMode;
@@ -42,6 +42,13 @@ pub struct DailyPanchang {
     pub yoga_name: String,
     /// Timestamp (Unix ms) when this Yoga ends.
     pub yoga_end_time: Option<f64>,
+
+    // Karana
+    /// Karana index (1-60).
+    pub karana_index: u8,
+    /// Name of the Karana (e.g., "Bava")
+    #[wasm_bindgen(getter_with_clone)]
+    pub karana_name: String,
 
     // Vara
     /// Solar Weekday name (e.g., "Adityawara")
@@ -93,6 +100,7 @@ pub fn calculate_daily_panchang(
         3 => AyanamshaMode::Raman,
         5 => AyanamshaMode::Krishnamurti,
         27 => AyanamshaMode::TrueCitra,
+        0 => AyanamshaMode::FaganBradley,
         _ => AyanamshaMode::Lahiri,
     };
 
@@ -172,6 +180,9 @@ pub fn calculate_daily_panchang(
 
     let yoga_end_ms = y_end_jd.map(|jd| (jd - 2440587.5) * 86_400_000.0);
 
+    // Karana at Sunrise
+    let k_info = karana::calculate_karana(sunrise_jd);
+
     // Vara (Weekday)
     let v_info = vara::calculate_vara(sunrise_jd);
     let weekday_idx = ((sunrise_jd + 1.5).floor() as i64 % 7) as u8;
@@ -195,6 +206,9 @@ pub fn calculate_daily_panchang(
         yoga_index: y_idx as u8,
         yoga_name: y_info.name,
         yoga_end_time: yoga_end_ms,
+        
+        karana_index: k_info.index,
+        karana_name: k_info.name,
         
         vara_name: v_info.name,
         

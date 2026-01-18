@@ -30,6 +30,7 @@ pub mod astronomy;
 pub mod vedic;
 pub mod geo;
 pub mod muhurat;
+pub mod constants;
 
 /// Get the library version (panchangam)
 #[wasm_bindgen]
@@ -79,5 +80,28 @@ pub fn calculate_sunrise(year: i32, month: u32, day: u32, location: &Location) -
 #[wasm_bindgen]
 pub fn calculate_sunset(year: i32, month: u32, day: u32, location: &Location) -> f64 {
     geo::sunrise_sunset::calculate_sunset(year, month, day, location.latitude, location.longitude, location.altitude)
+}
+
+/// Calculate house system (Ascendant, MC, House Cusps)
+/// 
+/// # Arguments
+/// * `jd` - Julian Day
+/// * `lat` - Latitude
+/// * `lon` - Longitude
+/// * `hsys` - House System (e.g. 'P' for Placidus, 'W' for Whole Sign)
+#[wasm_bindgen]
+pub fn calculate_houses(jd: f64, lat: f64, lon: f64, hsys: char) -> Result<astronomy::houses::HouseInfo, JsValue> {
+    astronomy::houses::calculate_houses(jd, lat, lon, hsys)
+}
+
+/// Calculate Vimshottari Dasha details
+/// 
+/// # Arguments
+/// * `moon_long` - Moon's sidereal longitude (degrees)
+/// * `birth_time_ms` - Birth time (Unix ms)
+/// * `current_time_ms` - Current time (Unix ms)
+#[wasm_bindgen]
+pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms: f64) -> vedic::dasha::DashaInfo {
+    vedic::dasha::calculate_vimshottari(moon_long, birth_time_ms, current_time_ms)
 }
 
