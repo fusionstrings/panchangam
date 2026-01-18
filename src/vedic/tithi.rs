@@ -107,7 +107,11 @@ pub fn tithi_end_time(jd: f64) -> f64 {
         let mut diff = moon_long - sun_long;
         if diff < 0.0 { diff += 360.0; }
         
-        let error = target_angle - diff;
+        let mut error = target_angle - diff;
+        // Handle wrap-around (important for Tithi 30 approaching 360)
+        if error > 180.0 { error -= 360.0; }
+        if error < -180.0 { error += 360.0; }
+        
         if error.abs() < 0.001 {
             break;
         }

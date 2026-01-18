@@ -9,16 +9,20 @@ use alloc::vec::Vec;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[wasm_bindgen(getter_with_clone)]
 pub struct DashaInfo {
-    /// Current Mahadasha lord (e.g., "Ketu")
+    /// Current Mahadasha lord
     pub mahadasha: String,
-    /// Current Antardasha lord (e.g., "Venus")
+    /// Current Antardasha lord
     pub antardasha: String,
-    /// Current Pratyantardasha lord (e.g., "Sun")
+    /// Current Pratyantardasha lord
     pub pratyantardasha: String,
-    /// Completion date of the current sub-period (Unix ms)
-    pub end_date: f64,
-    /// Time remaining in current sub-period (years)
-    pub years_remaining: f64,
+    
+    /// Date when the current Mahadasha ends (Unix ms)
+    pub mahadasha_end_date: f64,
+    /// Date when the current Antardasha ends (Unix ms)
+    pub antardasha_end_date: f64,
+    /// Date when the current Pratyantardasha ends (Unix ms)
+    pub pratyantardasha_end_date: f64,
+    
     /// Birth Nakshatra name
     pub nakshatra_name: String,
     /// Birth Nakshatra pada (1-4)
@@ -42,15 +46,21 @@ const DASHA_LORDS: [(&str, f64); 9] = [
 
 // Total cycle = 120 years
 
-/// Calculate Vimshottari Dasha for a given birth and current date.
+/// Calculate Vimshottari Dasha details
 /// 
 /// # Arguments
-/// * `moon_long` - Moon's sidereal longitude at birth (degrees)
-/// * `birth_time_ms` - Birth time in Unix milliseconds
-/// * `current_time_ms` - Current time in Unix milliseconds
+/// * `moon_long` - Moon's sidereal longitude (degrees)
+/// * `birth_time_ms` - Birth time (Unix ms)
+/// * `current_time_ms` - Current time (Unix ms)
 pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms: f64) -> DashaInfo {
+    // Normalize moon_long to [0, 360)
+    let mut normalized_moon = moon_long % 360.0;
+    if normalized_moon < 0.0 {
+        normalized_moon += 360.0;
+    }
+
     // 1. Nakshatra calculation
-    let nakshatra_val = moon_long / NAKSHATRA_SPAN;
+    let nakshatra_val = normalized_moon / NAKSHATRA_SPAN;
     let nak_index = nakshatra_val.floor() as usize; // 0-26
     let fraction = nakshatra_val - nakshatra_val.floor();
     
@@ -74,15 +84,8 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
     let mut current_mahadasha_idx = start_dasha_idx;
     let mut time_in_dasha = elapsed_years;
     
-    // Adjust for initial balance
-    // If elapsed time < balance, we are still in first dasha
-    let mut mahadasha_start_offset = 0.0;
-    
     if elapsed_years < balance_years {
         // Still in birth dasha
-        // Effective time passed within this dasha is (duration - balance) + elapsed
-        // But simpler: calculate sub-periods based on remaining balance?
-        // Let's standardise: treat birth moment as (duration - balance) into the dasha.
         time_in_dasha = (DASHA_LORDS[start_dasha_idx].1 - balance_years) + elapsed_years;
     } else {
         // Passed the first dasha balance
@@ -97,6 +100,8 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
     }
     
     let (md_lord, md_duration) = DASHA_LORDS[current_mahadasha_idx];
+    let md_remaining = md_duration - time_in_dasha;
+    let md_end_ms = current_time_ms + (md_remaining * ms_per_year);
     
     // 6. Antardasha (Sub-period)
     // Sub-periods are proportional: SubDuration = MainDuration * (SubLordDuration / 120)
@@ -117,6 +122,8 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
     }
     
     let (ad_lord, _) = DASHA_LORDS[current_antardasha_idx];
+    let ad_remaining = ad_duration - time_in_ad;
+    let ad_end_ms = current_time_ms + (ad_remaining * ms_per_year);
     
     // 7. Pratyantardasha (Sub-sub-period)
     // PD = AD * (PD_Lord / 120)
@@ -136,10 +143,8 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
     }
     
     let (pd_lord, _) = DASHA_LORDS[current_pd_idx];
-    
-    // Calculate end date of current PD
-    let remaining_years_in_pd = pd_duration - time_in_pd;
-    let end_ms = current_time_ms + (remaining_years_in_pd * ms_per_year);
+    let pd_remaining = pd_duration - time_in_pd;
+    let pd_end_ms = current_time_ms + (pd_remaining * ms_per_year);
     
     use crate::vedic::nakshatra::NAKSHATRA_NAMES;
     let nak_name = if nak_index < 27 { 
@@ -152,8 +157,9 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
         mahadasha: md_lord.to_string(),
         antardasha: ad_lord.to_string(),
         pratyantardasha: pd_lord.to_string(),
-        end_date: end_ms,
-        years_remaining: remaining_years_in_pd,
+        mahadasha_end_date: md_end_ms,
+        antardasha_end_date: ad_end_ms,
+        pratyantardasha_end_date: pd_end_ms,
         nakshatra_name: nak_name,
         nakshatra_pada: pada,
     }
