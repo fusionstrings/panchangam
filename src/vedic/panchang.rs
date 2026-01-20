@@ -55,6 +55,17 @@ pub struct DailyPanchang {
     #[wasm_bindgen(getter_with_clone)]
     pub vara_name: String,
     
+    // Houses
+    /// Sidereal Ascendant (Lagna) at sunrise (degrees)
+    pub ascendant: f64,
+    /// Sidereal Midheaven (MC) at sunrise (degrees)
+    pub mc: f64,
+    
+    // Planets
+    /// Array of planetary positions at sunrise
+    #[wasm_bindgen(skip)]
+    pub planets: alloc::vec::Vec<crate::astronomy::planets::PlanetData>,
+    
     // Config
     /// The Ayanamsha value (in degrees) used for calculations
     pub ayanamsha_value: f64,
@@ -63,6 +74,14 @@ pub struct DailyPanchang {
     /// Auspicious and Inauspicious time periods for the day
     #[wasm_bindgen(getter_with_clone)]
     pub muhurats: muhurat::DayMuhurats,
+}
+
+#[wasm_bindgen]
+impl DailyPanchang {
+    #[wasm_bindgen(getter)]
+    pub fn planets(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.planets).unwrap_or(JsValue::NULL)
+    }
 }
 
 /// Calculate the complete Panchangam for a given date and location.
@@ -191,6 +210,18 @@ pub fn calculate_daily_panchang(
     let sunset_ms = calculate_sunset(year, month, day, location);
     let muhurats = muhurat::calculate_muhurats(sunrise_ms, sunset_ms, weekday_idx);
 
+    // Houses at Sunrise
+    let h_info = crate::astronomy::houses::calculate_houses(
+        sunrise_jd,
+        location.latitude,
+        location.longitude,
+        'P',
+        Some(mode)
+    )?;
+
+    // Planets at Sunrise (Vec<PlanetData>)
+    let p_list = crate::astronomy::planets::get_planet_positions_bulk(sunrise_jd, ayan_val);
+
     Ok(DailyPanchang {
         sunrise: sunrise_ms,
         sunset: sunset_ms,
@@ -211,6 +242,11 @@ pub fn calculate_daily_panchang(
         karana_name: k_info.name,
         
         vara_name: v_info.name,
+        
+        ascendant: h_info.ascendant,
+        mc: h_info.mc,
+        
+        planets: p_list,
         
         ayanamsha_value: ayan_val,
         muhurats: muhurats,

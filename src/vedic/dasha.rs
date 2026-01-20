@@ -3,7 +3,6 @@
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
 use alloc::string::{String, ToString};
-use alloc::vec::Vec;
 
 /// Dasha period information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,7 +81,7 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
     
     // 5. Find current Mahadasha
     let mut current_mahadasha_idx = start_dasha_idx;
-    let mut time_in_dasha = elapsed_years;
+    let mut time_in_dasha;
     
     if elapsed_years < balance_years {
         // Still in birth dasha
@@ -108,7 +107,7 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
     // Cycle starts from the Mahadasha lord itself
     let mut current_antardasha_idx = current_mahadasha_idx;
     let mut time_in_ad = time_in_dasha;
-    let mut ad_duration = 0.0;
+    let mut ad_duration;
     
     loop {
         let (_ad_lord_name, ad_lord_dur) = DASHA_LORDS[current_antardasha_idx];
@@ -129,7 +128,7 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
     // PD = AD * (PD_Lord / 120)
     let mut current_pd_idx = current_antardasha_idx;
     let mut time_in_pd = time_in_ad;
-    let mut pd_duration = 0.0;
+    let mut pd_duration;
     
     loop {
         let (_pd_lord, pd_lord_dur) = DASHA_LORDS[current_pd_idx];

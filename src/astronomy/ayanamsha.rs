@@ -7,34 +7,41 @@ use crate::swe_bindings;
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[wasm_bindgen]
 pub enum AyanamshaMode {
-    /// Lahiri (Chitrapaksha)
-    Lahiri = 0,
-    /// Raman
-    Raman = 1,
-    /// Krishnamurti (KP)
-    Krishnamurti = 2,
-    /// True Chitrapaksha
+    /// Fagan-Bradley (0)
+    FaganBradley = 0,
+    /// Lahiri (1)
+    Lahiri = 1,
+    /// De Luce (2)
+    DeLuce = 2,
+    /// Raman (3)
+    Raman = 3,
+    /// Krishnamurti (5)
+    Krishnamurti = 5,
+    /// Yukteshwar (7)
+    Yukteshwar = 7,
+    /// J.N. Bhasin (8)
+    JNBhasin = 8,
+    /// True Chitrapaksha (27)
     TrueCitra = 27,
-    /// Fagan-Bradley
-    FaganBradley = 4, // Custom ID, doesn't matter as long as unique
 }
 
 impl AyanamshaMode {
-    pub fn to_swe_mode(&self) -> i32 {
-        // Swiss Ephemeris sidereal mode constants (from swephexp.h)
-        const SE_SIDM_LAHIRI: i32 = 1;
-        const SE_SIDM_RAMAN: i32 = 3;
-        const SE_SIDM_KRISHNAMURTI: i32 = 5;
-        const SE_SIDM_TRUE_CITRA: i32 = 27;
-        const SE_SIDM_FAGAN_BRADLEY: i32 = 0;
-        
-        match self {
-            AyanamshaMode::Lahiri => SE_SIDM_LAHIRI,
-            AyanamshaMode::Raman => SE_SIDM_RAMAN,
-            AyanamshaMode::Krishnamurti => SE_SIDM_KRISHNAMURTI,
-            AyanamshaMode::TrueCitra => SE_SIDM_TRUE_CITRA,
-            AyanamshaMode::FaganBradley => SE_SIDM_FAGAN_BRADLEY,
+    pub fn from_i32(val: i32) -> Self {
+        match val {
+            0 => AyanamshaMode::FaganBradley,
+            1 => AyanamshaMode::Lahiri,
+            2 => AyanamshaMode::DeLuce,
+            3 => AyanamshaMode::Raman,
+            5 => AyanamshaMode::Krishnamurti,
+            7 => AyanamshaMode::Yukteshwar,
+            8 => AyanamshaMode::JNBhasin,
+            27 => AyanamshaMode::TrueCitra,
+            _ => AyanamshaMode::Lahiri,
         }
+    }
+    
+    pub fn to_swe_mode(&self) -> i32 {
+        *self as i32
     }
 }
 

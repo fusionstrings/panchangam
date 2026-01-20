@@ -31,7 +31,7 @@ Deno.test("Constants Export", () => {
 Deno.test("Ascendant Calculation", () => {
   // 2026-01-18 12:00 UT at New Delhi
   // Just verify it returns numbers and structure
-  const houses = calculate_houses(jd, loc.latitude, loc.longitude, "P");
+  const houses = calculate_houses(jd, loc.latitude, loc.longitude, "P", 1);
   console.log("Ascendant:", houses.ascendant);
   console.log("MC:", houses.mc);
 

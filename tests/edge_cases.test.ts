@@ -79,7 +79,7 @@ Deno.test("Tithi: 30th Tithi (Amavasya) Boundary", () => {
 Deno.test("Ascendant: Polar Latitude", () => {
   // High latitude (e.g., 80N) where houses can be weird
   const jd = 2461058.5;
-  const houses = calculate_houses(jd, 80.0, 0.0, "P");
+  const houses = calculate_houses(jd, 80.0, 0.0, "P", 1);
 
   // Check for NaN
   if (isNaN(houses.ascendant)) {

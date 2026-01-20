@@ -12,7 +12,7 @@
 
 #![no_std]
 extern crate alloc;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 use swisseph_wasm; // Ensure it's linked
 
 
@@ -82,6 +82,8 @@ pub fn calculate_sunset(year: i32, month: u32, day: u32, location: &Location) ->
     geo::sunrise_sunset::calculate_sunset(year, month, day, location.latitude, location.longitude, location.altitude)
 }
 
+pub use astronomy::planets::PlanetData;
+
 /// Calculate house system (Ascendant, MC, House Cusps)
 /// 
 /// # Arguments
@@ -89,9 +91,36 @@ pub fn calculate_sunset(year: i32, month: u32, day: u32, location: &Location) ->
 /// * `lat` - Latitude
 /// * `lon` - Longitude
 /// * `hsys` - House System (e.g. 'P' for Placidus, 'W' for Whole Sign)
+/// * `ayan_mode` - Ayanamsha mode (-1 for tropical, others for sidereal)
 #[wasm_bindgen]
-pub fn calculate_houses(jd: f64, lat: f64, lon: f64, hsys: char) -> Result<astronomy::houses::HouseInfo, JsValue> {
-    astronomy::houses::calculate_houses(jd, lat, lon, hsys)
+pub fn calculate_houses(
+    jd: f64, 
+    lat: f64, 
+    lon: f64, 
+    hsys: char, 
+    ayan_mode: i32
+) -> Result<astronomy::houses::HouseInfo, JsValue> {
+    let mode = if ayan_mode < 0 { 
+        None 
+    } else { 
+        Some(astronomy::ayanamsha::AyanamshaMode::from_i32(ayan_mode)) 
+    };
+    astronomy::houses::calculate_houses(jd, lat, lon, hsys, mode)
+}
+
+/// Calculate Sidereal Planet Positions for all 9 core planets
+/// 
+/// # Arguments
+/// * `jd` - Julian Day
+/// * `ayan_mode` - Ayanamsha mode (e.g., 1 for Lahiri)
+#[wasm_bindgen]
+pub fn calculate_planets(jd: f64, ayan_mode: i32) -> Result<JsValue, JsValue> {
+    let mode = astronomy::ayanamsha::AyanamshaMode::from_i32(ayan_mode);
+    let ayan_val = astronomy::ayanamsha::get_ayanamsha(mode, jd);
+    
+    let planets = astronomy::planets::get_planet_positions_bulk(jd, ayan_val);
+
+    Ok(serde_wasm_bindgen::to_value(&planets)?)
 }
 
 /// Calculate Vimshottari Dasha details
