@@ -10,8 +10,8 @@ repository = "https://github.com/fusionstrings/panchangam"
 crate-type = ["cdylib", "rlib"]
 
 
-[workspace]
-members = []
+
+
 
 [dependencies]
 wasm-bindgen = "0.2.106"

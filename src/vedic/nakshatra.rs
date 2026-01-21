@@ -89,9 +89,9 @@ pub fn nakshatra_end_time(jd: f64, ayanamsha_mode: AyanamshaMode) -> f64 {
     let nakshatra_span = 360.0 / 27.0;
     let target_long = current.index as f64 * nakshatra_span; // End of current Nakshatra
     
-    // Moon moves ~13.2 deg/day. 1 Nakshatra ~ 1 day. Search 1.2 days ahead.
+    // Moon moves ~13.2 deg/day. 1 Nakshatra ~ 1 day. Search 1.5 days ahead.
     let start_search = jd;
-    let end_search = jd + 1.2;
+    let end_search = jd + 1.5;
     
     find_angle_crossing(
         |t| {
@@ -113,8 +113,8 @@ pub fn nakshatra_start_time(jd: f64, ayanamsha_mode: AyanamshaMode) -> f64 {
     // Start of current is end of previous (index - 1)
     let target_long = (current.index as f64 - 1.0) * nakshatra_span;
     
-    // Search backward 1.2 days
-    let start_search = jd - 1.2;
+    // Search backward 1.5 days
+    let start_search = jd - 1.5;
     let end_search = jd;
     
     find_angle_crossing(

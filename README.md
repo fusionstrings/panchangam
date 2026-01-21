@@ -150,6 +150,80 @@ console.log(
 );
 ```
 
+### Planetary War (Graha Yuddha)
+
+Detect planetary wars where planets are within 1° of each other.
+
+```typescript
+import { check_graha_yuddha, swe_julday } from "./lib/panchangam.js";
+
+const jd = swe_julday(2024, 1, 1, 12.0, 1);
+const wars = check_graha_yuddha(jd, 1); // Mode 1 = Lahiri
+
+if (wars.length > 0) {
+  console.log("Planetary War Detected!");
+  wars.forEach((war) => {
+    console.log(
+      `${war.planet1_name} vs ${war.planet2_name} (Diff: ${
+        war.longitude_diff.toFixed(
+          4,
+        )
+      }°)`,
+    );
+    console.log(`Winner: Planet ID ${war.winner_id} (Brighter)`);
+  });
+} else {
+  console.log("No planetary wars currently.");
+}
+```
+
+### Vimshottari Dasha
+
+Calculate the current ruling planetary periods.
+
+```typescript
+import { calculate_vimshottari } from "./lib/panchangam.js";
+
+// Birth details
+const birth_moon_long = 45.5; // Example longitude
+const birth_time_ms = new Date("1990-01-01").getTime();
+const current_time_ms = Date.now();
+
+const dasha = calculate_vimshottari(
+  birth_moon_long,
+  birth_time_ms,
+  current_time_ms,
+);
+
+console.log(`Current Mahadasha: ${dasha.mahadasha}`);
+console.log(`Current Antardasha: ${dasha.antardasha}`);
+console.log(`Current Pratyantardasha: ${dasha.pratyantardasha}`);
+console.log(
+  `Ends: ${new Date(dasha.pratyantardasha_end_date).toLocaleDateString()}`,
+);
+```
+
+### House Calculation
+
+Calculate Ascendant and House Cusps for various systems (Placidus, Whole Sign,
+etc.).
+
+```typescript
+import { calculate_houses, Location } from "./lib/panchangam.js";
+
+const jd = swe_julday(2024, 1, 1, 12.0, 1);
+const loc = new Location(28.6139, 77.2090, 0.0);
+
+// 'P' = Placidus, 'W' = Whole Sign, 'E' = Equal
+// Mode 1 = Lahiri Ayanamsha (Sidereal)
+const houses = calculate_houses(jd, loc.latitude, loc.longitude, "P", 1);
+
+console.log(`Ascendant: ${houses.ascendant.toFixed(2)}°`);
+houses.cusps.forEach((cusp, i) => {
+  console.log(`House ${i + 1}: ${cusp.toFixed(2)}°`);
+});
+```
+
 ## 🛠️ Development
 
 ### Project Structure

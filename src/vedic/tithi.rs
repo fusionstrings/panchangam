@@ -94,9 +94,9 @@ pub fn tithi_end_time(jd: f64) -> f64 {
     let current = calculate_tithi(jd);
     let target_angle = current.index as f64 * 12.0; // End of current Tithi
     
-    // Tithi length is approx 0.9 to 1.0 day. Search up to 1.2 days ahead.
+    // Tithi length is approx 0.9 to 1.0 day. Search up to 1.5 days ahead.
     let start_search = jd;
-    let end_search = jd + 1.2;
+    let end_search = jd + 1.5;
     
     find_angle_crossing(
         |t| {
@@ -120,7 +120,7 @@ pub fn tithi_start_time(jd: f64) -> f64 {
     let target_angle = (current.index as f64 - 1.0) * 12.0;
     
     // Search backwards
-    let start_search = jd - 1.2;
+    let start_search = jd - 1.5;
     let end_search = jd;
     
     find_angle_crossing(
