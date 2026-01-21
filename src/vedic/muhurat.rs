@@ -28,7 +28,12 @@ pub struct DayMuhurats {
     /// Period of Gulika (Neutral/Inauspicious)
     #[wasm_bindgen(getter_with_clone)]
     pub gulika: Muhurat,
-    // Add Durmuhurat, Abhijit later if needed
+    /// Brahma Muhurta (Pre-dawn)
+    #[wasm_bindgen(getter_with_clone)]
+    pub brahma_muhurta: Muhurat,
+    /// Abhijit Muhurta (Mid-day victory period)
+    #[wasm_bindgen(getter_with_clone)]
+    pub abhijit_muhurta: Muhurat,
 }
 
 /// Calculate Raahu, Yamaganda, and Gulika for a given day
@@ -78,9 +83,33 @@ pub fn calculate_muhurats(sunrise_ms: f64, sunset_ms: f64, weekday: u8) -> DayMu
         }
     };
     
+    // Brahma Muhurta: 96 minutes before Sunrise -> Sunrise
+    // 96 minutes = 5760000 ms
+    let brahma_start = sunrise_ms - 5_760_000.0;
+    let brahma = Muhurat {
+        name: "Brahma Muhurta".to_string(),
+        start: brahma_start,
+        end: sunrise_ms,
+    };
+
+    // Abhijit Muhurta: 8th Muhurta of 15 day divisions
+    // Day duration = sunset - sunrise
+    let day_len = sunset_ms - sunrise_ms;
+    let muhurta_len = day_len / 15.0;
+    let abhijit_start = sunrise_ms + (7.0 * muhurta_len); // Start of 8th
+    let abhijit_end = abhijit_start + muhurta_len;
+    
+    let abhijit = Muhurat {
+        name: "Abhijit Muhurta".to_string(),
+        start: abhijit_start,
+        end: abhijit_end,
+    };
+
     DayMuhurats {
         rahu_kalam: make_muhurat("Rahu Kalam", rahu_octad),
         yamaganda: make_muhurat("Yamaganda", yama_octad),
         gulika: make_muhurat("Gulika Kalam", gulika_octad),
+        brahma_muhurta: brahma,
+        abhijit_muhurta: abhijit,
     }
 }

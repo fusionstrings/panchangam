@@ -4,7 +4,6 @@
 
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
-use crate::swe_bindings;
 use alloc::vec::Vec;
 
 /// House system information
@@ -49,80 +48,72 @@ pub fn calculate_houses(
     hsys: char, 
     ayan_mode: Option<AyanamshaMode>
 ) -> Result<HouseInfo, JsValue> {
-    // 1. Get Greenwich Sidereal Time (hours)
-    let gst = unsafe { swe_bindings::swe_sidtime(jd) };
-    
-    // 2. Local Sidereal Time (degrees)
-    let mut lst = gst * 15.0 + lon;
-    while lst < 0.0 { lst += 360.0; }
-    while lst >= 360.0 { lst -= 360.0; }
-    
-    // 3. Obliquity of Ecliptic (Epsilon)
-    let mut xx = [0.0; 6];
-    let mut serr = [0i8; 256];
-    unsafe {
-        // -1 = SE_ECL_NUT
-        swe_bindings::swe_calc_ut(jd, -1, 0, xx.as_mut_ptr(), serr.as_mut_ptr());
-    }
-    let epsilon = xx[0];
-    
-    // 4. Calculate Ascendant
-    let rad = core::f64::consts::PI / 180.0;
-    let sin_lst = (lst * rad).sin();
-    let cos_lst = (lst * rad).cos();
-    let sin_e = (epsilon * rad).sin();
-    let cos_e = (epsilon * rad).cos();
-    let tan_lat = (lat * rad).tan();
-    
-    let x = sin_e * tan_lat + cos_e * sin_lst;
-    let y = -cos_lst;
-    
-    let asc_rad = y.atan2(x);
-    let mut asc_deg = asc_rad / rad;
-    if asc_deg < 0.0 { asc_deg += 360.0; }
-    
-    // 5. MC (Midheaven)
-    let mc_y = sin_lst;
-    let mc_x = cos_lst * cos_e;
-    let mc_rad = mc_y.atan2(mc_x);
-    let mut mc_deg = mc_rad / rad;
-    if mc_deg < 0.0 { mc_deg += 360.0; }
-    
-    // 6. Ayanamsha Correction (Sidereal)
+    // Map char to HouseSystem
+    let sys = match hsys {
+        'P' => swiss_eph::safe::HouseSystem::Placidus,
+        'K' => swiss_eph::safe::HouseSystem::Koch,
+        'O' => swiss_eph::safe::HouseSystem::Porphyrius,
+        'R' => swiss_eph::safe::HouseSystem::Regiomontanus,
+        'C' => swiss_eph::safe::HouseSystem::Campanus,
+        'E' => swiss_eph::safe::HouseSystem::Equal,
+        'W' => swiss_eph::safe::HouseSystem::WholeSign,
+        'B' => swiss_eph::safe::HouseSystem::Alcabitus,
+        'M' => swiss_eph::safe::HouseSystem::Morinus,
+        'T' => swiss_eph::safe::HouseSystem::Topocentric,
+        'V' => swiss_eph::safe::HouseSystem::Vehlow,
+        _ => swiss_eph::safe::HouseSystem::Placidus, // Default fallback
+    };
+
+    // Calculate Tropical Houses
+    let houses = swiss_eph::safe::houses(jd, lat, lon, sys)
+        .map_err(|e| JsValue::from_str(&e.message))?;
+
+    let mut asc_deg = houses.ascendant;
+    let mut mc_deg = houses.mc;
+    let armc = houses.armc;
+    let mut vertex = houses.vertex;
+    let eq_asc = houses.equatorial_ascendant;
+    let co_asc1 = houses.co_ascendant_koch;
+    let co_asc2 = houses.co_ascendant_munkasey;
+    let pol_asc = houses.polar_ascendant;
+    let mut cusps_vec = houses.cusps.to_vec();
+
+    // Apply Ayanamsha if needed
     if let Some(mode) = ayan_mode {
         let ayan = get_ayanamsha(mode, jd);
+        
         asc_deg = (asc_deg - ayan + 360.0) % 360.0;
         mc_deg = (mc_deg - ayan + 360.0) % 360.0;
-    }
-
-    // 7. House Cusps
-    let mut cusps = alloc::vec![0.0; 12];
-    
-    match hsys {
-        'W' => {
-            // Whole Sign: Cusp 1 is 0 degrees of the sign containing Ascendant
-            let sign_start = (asc_deg / 30.0).floor() * 30.0;
-            for i in 0..12 {
-                cusps[i] = (sign_start + (i as f64) * 30.0) % 360.0;
-            }
-        },
-        _ => {
-            // Default/Equal House: Cusp 1 is the Ascendant itself
-            for i in 0..12 {
-                cusps[i] = (asc_deg + (i as f64) * 30.0) % 360.0;
-            }
+        // ARMC is Sidereal Time (RAMC), usually not adjusted by Ayanamsha in the same way as longitude?
+        // Wait, ARMC is Right Ascension of MC. 
+        // If we want Sidereal positions, we adjust Ecliptic Longitudes (Asc, MC, Cusps, Vertex?).
+        // Vertex is on Ecliptic? Yes.
+        // Eq Asc? 
+        // The manual code only adjusted Asc and MC:
+        // asc_deg = (asc_deg - ayan + 360.0) % 360.0;
+        // mc_deg = (mc_deg - ayan + 360.0) % 360.0;
+        // And then recalculated cusps based on new Asc (for Equal/Whole).
+        
+        // Since we are using swiss-eph which gives us all cusps:
+        // We should adjust ALL ecliptic longitudes.
+        vertex = (vertex - ayan + 360.0) % 360.0;
+        
+        // Adjust cusps
+        for i in 0..12 {
+            cusps_vec[i] = (cusps_vec[i] - ayan + 360.0) % 360.0;
         }
+        
     }
 
     Ok(HouseInfo {
         ascendant: asc_deg,
         mc: mc_deg,
-        armc: lst,
-        vertex: 0.0,
-        equatorial_ascendant: 0.0,
-        co_ascendant1: 0.0,
-        co_ascendant2: 0.0,
-        polar_ascendant: 0.0,
-        cusps,
+        armc,
+        vertex,
+        equatorial_ascendant: eq_asc,
+        co_ascendant1: co_asc1,
+        co_ascendant2: co_asc2,
+        polar_ascendant: pol_asc,
+        cusps: cusps_vec,
     })
 }

@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
 use alloc::string::{String, ToString};
 use crate::astronomy::planets::{sun_longitude, moon_longitude};
+use crate::astronomy::solver::find_angle_crossing;
 
 /// Tithi names (1-30)
 pub const TITHI_NAMES: [&str; 30] = [
@@ -87,50 +88,30 @@ pub fn calculate_tithi(jd: f64) -> TithiInfo {
     }
 }
 
-/// Calculate the Julian Day when the current Tithi ends
-/// 
-/// # Arguments
-/// * `jd` - Julian Day to start search from
-/// 
-/// # Returns
 /// Julian Day when the current Tithi ends
 #[wasm_bindgen]
 pub fn tithi_end_time(jd: f64) -> f64 {
     let current = calculate_tithi(jd);
     let target_angle = current.index as f64 * 12.0; // End of current Tithi
     
-    // Iterative solver (simple Newton-Raphson)
-    let mut search_jd = jd;
-    for _ in 0..20 {
-        let sun_long = sun_longitude(search_jd);
-        let moon_long = moon_longitude(search_jd);
-        let mut diff = moon_long - sun_long;
-        if diff < 0.0 { diff += 360.0; }
-        
-        let mut error = target_angle - diff;
-        // Handle wrap-around (important for Tithi 30 approaching 360)
-        if error > 180.0 { error -= 360.0; }
-        if error < -180.0 { error += 360.0; }
-        
-        if error.abs() < 0.001 {
-            break;
-        }
-        
-        // Moon moves ~13.2 deg/day, Sun moves ~1 deg/day
-        // Net motion ~12.2 deg/day
-        let step = error / 12.2;
-        search_jd += step;
-    }
+    // Tithi length is approx 0.9 to 1.0 day. Search up to 1.2 days ahead.
+    let start_search = jd;
+    let end_search = jd + 1.2;
     
-    search_jd
+    find_angle_crossing(
+        |t| {
+            let sl = sun_longitude(t);
+            let ml = moon_longitude(t);
+            let mut d = ml - sl;
+            if d < 0.0 { d += 360.0; }
+            d
+        },
+        start_search,
+        end_search,
+        target_angle
+    ).unwrap_or(jd) // Fallback to input if not found (should not happen)
 }
 
-/// Calculate the Julian Day when the current Tithi started
-/// 
-/// # Arguments
-/// * `jd` - Julian Day to start search from
-/// 
-/// # Returns
 /// Julian Day when the current Tithi started
 #[wasm_bindgen]
 pub fn tithi_start_time(jd: f64) -> f64 {
@@ -139,25 +120,19 @@ pub fn tithi_start_time(jd: f64) -> f64 {
     let target_angle = (current.index as f64 - 1.0) * 12.0;
     
     // Search backwards
-    let mut search_jd = jd;
-    for _ in 0..20 {
-        let sun_long = sun_longitude(search_jd);
-        let moon_long = moon_longitude(search_jd);
-        let mut diff = moon_long - sun_long;
-        if diff < 0.0 { diff += 360.0; }
-        
-        let mut error = target_angle - diff;
-        // Handle wrap-around (e.g., Tithi 1 starts at 0°)
-        if error > 180.0 { error -= 360.0; }
-        if error < -180.0 { error += 360.0; }
-        
-        if error.abs() < 0.001 {
-            break;
-        }
-        
-        let step = error / 12.2;
-        search_jd += step;
-    }
+    let start_search = jd - 1.2;
+    let end_search = jd;
     
-    search_jd
+    find_angle_crossing(
+        |t| {
+            let sl = sun_longitude(t);
+            let ml = moon_longitude(t);
+            let mut d = ml - sl;
+            if d < 0.0 { d += 360.0; }
+            d
+        },
+        start_search,
+        end_search,
+        target_angle
+    ).unwrap_or(jd)
 }

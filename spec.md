@@ -6,18 +6,19 @@ modeling.
 
 ## 1. Core Principles
 
-The library transitions from simple "Table Lookup" methods to "Real-Time Vector
-Calculation" (Drik Ganita) to ensure precision across all geolocations.
+The library uses "Real-Time Vector Calculation" (Drik Ganita) to ensure
+precision across all geolocations, rejecting static lookup tables in favor of
+high-precision orbital physics.
 
 ### 1.1. Ephemeris Kernel (Rust/Wasm)
 
 - **Standard**: **Drik Ganita** (Astronomical Precision).
-- **Planetary Data**: Uses **Swiss Ephemeris** (via generic C bindings) for
-  NASA-grade planetary positions (Geocentric Longitude & Latitude).
+- **Planetary Data**: Uses **Swiss Ephemeris** (v2.10) for NASA-grade planetary
+  positions (Geocentric Longitude & Latitude).
 - **Ayanamsha**: Supports a **Dynamic Ayanamsha Factory** to convert Tropical
   (Sayana) positions to Sidereal (Nirayana).
   - **Supported Modes**: Lahiri (Chitrapaksha), Raman, Krishnamurti, True
-    Chitrapaksha.
+    Chitrapaksha, Fagan-Bradley.
   - **Formula**: $L_{nirayana} = L_{sayana} - Ayanamsha(t)$
 - **Platform**: Compiled to **WebAssembly (Wasm)** for near-native speed in
   browsers, Node.js, and Edge environments.
@@ -27,10 +28,9 @@ Calculation" (Drik Ganita) to ensure precision across all geolocations.
 - **Requirement**: Vedic days are defined by **Sunrise** (Udaya), not midnight.
 - **Solution**: Iterative sunrise/sunset calculation accounting for
   **Atmospheric Refraction** and **Elevation**.
-- **Distinction**: Distinguishes between:
-  - **Technical Event**: Exact astronomical end time (e.g., Tithi ends at
-    14:03).
-  - **Visual Event**: Observable phenomena (e.g., Moonrise).
+- **Timings**: Calculates exact start and end times for all Angas (Tithi,
+  Nakshatra, Yoga, Karana) using binary search crossing detection against the
+  ephemeris.
 
 ## 2. Architecture & Modules
 
@@ -42,13 +42,12 @@ Calculates the instantaneous state of the _Pancha Anga_.
 
 - **Definition**: Angular distance between Moon ($L_m$) and Sun ($L_s$) in
   $12^{\circ}$ increments.
-- **Output**: Index (1-30), Name, Paksha, and Percentage Remaining.
+- **Precision**: 1-second accuracy for start/end times via iterative solver.
 
 **2. Nakshatra (Lunar Mansion)**
 
 - **Definition**: Moon's longitude divided into 27 segments of $13^{\circ}20'$.
-- **Precision**: Calculates exact boundary crossing times (e.g., Mrigashirsha to
-  Ardra).
+- **Values**: Index, Name, Ruler, Quality.
 
 **3. Yoga (Luni-Solar Sum)**
 
@@ -60,46 +59,32 @@ Calculates the instantaneous state of the _Pancha Anga_.
 
 **5. Vara (Solar Weekday)**
 
-- **Logic**: Day begins at **Sunrise**. If `CurrentTime < Sunrise`, it counts as
-  the previous weekday.
+- **Logic**: Day begins at **Sunrise**.
 
 ### Module B: MuhuratMatrix (Time Quality)
 
-Segments the day into auspicious/inauspicious windows based on the 8-part
-division of the "Dinamaan" (Day Duration).
+Segments the day into auspicious/inauspicious windows using the breakdown of
+"Dinamaan" (Day Duration).
 
 **1. 8-Part Algorithm**
 
 - **Calculation**: `(Sunset - Sunrise) / 8`
-- **Segments**: Rahu Kalam (Inauspicious), Yamaganda, Gulika.
-- **Logic**: Variable start times based on Weekday.
+- **Segments**: Rahu Kalam, Yamaganda, Gulika.
 
-## 3. Implementation Plan
+**2. Special Muhurats**
 
-### Phase 1: Rust Core (Astronomy)
+- **Brahma Muhurta**: 96 minutes before Sunrise.
+- **Abhijit Muhurta**: Mid-day victory period (8th part of 15 divisions).
 
-- Wrap `libswe` (Swiss Ephemeris).
-- Implement `Ayanamsha` trait.
-- Validate against NASA JPL Horizons.
+### Module C: Astro-Logic (Dignity & Strength)
 
-### Phase 2: Vedic Math (Panchang)
+**1. Planetary Dignity**
 
-- Implement Tithi, Nakshatra, Yoga calculations.
-- **Root Finding**: Use iterative solvers (Brent's method) to find exact end
-  times for Tithi/Nakshatra.
+- **Algorithm**: Parashara's Light logic.
+- **States**: Exalted, Moolatrikona, Own Sign, Great Friend, Friend, Neutral,
+  Enemy, Great Enemy, Debilitated.
 
-### Phase 3: Geo-Spatial
-
-- Precise `Sunrise` algorithm.
-- `DailyPanchang` struct anchored to local Sunrise.
-- **Planetary War**: Detection logic for planets within $< 1^{\circ}$.
-
-### Phase 4: Wasm/TS Bindings
-
-- Expose Rust structs via `wasm-bindgen`.
-- Generate strict TypeScript definitions (`.d.ts`).
-
-## 4. Data Specifications
+## 3. Data Specifications
 
 The library outputs a comprehensive structure:
 
@@ -109,40 +94,51 @@ interface DailyPanchang {
   sunrise: number; // Unix ms
   sunset: number;
 
-  // The 5 Angas
+  // The 5 Angas (With precise Start/End times)
   tithi: {
     index: number;
     name: string;
+    startTime: number | null;
     endTime: number | null;
   };
   nakshatra: {
     index: number;
     name: string;
+    startTime: number | null;
     endTime: number | null;
   };
   yoga: {
     index: number;
     name: string;
+    startTime: number | null;
+    endTime: number | null;
+  };
+  karana: {
+    index: number;
+    name: string;
+    startTime: number | null;
     endTime: number | null;
   };
   vara: string;
 
   // Astronomy
   ayanamshaValue: number;
+  planets: PlanetData[]; // Includes Dignity
 
   // Muhurats
   muhurats: {
     rahuKalam: { start: number; end: number };
     yamaganda: { start: number; end: number };
     gulika: { start: number; end: number };
+    brahmaMuhurta: { start: number; end: number };
+    abhijitMuhurta: { start: number; end: number };
   };
 }
 ```
 
-## 5. Verification
+## 4. Verification Standard
 
-Accuracy is verified against:
+Accuracy is validated against:
 
-1. **DrikPanchang.com**: For Tithi end times.
-2. **Swiss Ephemeris**: For raw planetary positions.
-3. **Physical Observation**: Sunrise times adjusted for refraction.
+1. **Swiss Ephemeris**: For raw planetary positions (gold standard).
+2. **Drik Ganita Principles**: For algorithmic correctness of Vedic timings.

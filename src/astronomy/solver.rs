@@ -59,6 +59,19 @@ where
     Some((low_time + high_time) / 2.0)
 }
 
+/// Find when an angular value crosses a target (0-360 degrees context)
+pub fn find_angle_crossing<F>(
+    calculate_angle: F,
+    start_jd: f64,
+    end_jd: f64,
+    target_angle: f64,
+) -> Option<f64>
+where
+    F: FnMut(f64) -> f64,
+{
+    find_crossing_time(calculate_angle, start_jd, end_jd, target_angle, 360.0)
+}
+
 /// Normalize val to be within [-period/2, +period/2] of ref_val
 fn normalize_relative(val: f64, ref_val: f64, period: f64) -> f64 {
     let mut diff = val - ref_val;

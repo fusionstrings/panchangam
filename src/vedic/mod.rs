@@ -9,3 +9,4 @@ pub mod panchang;
 pub mod graha_yuddha;
 pub mod muhurat;
 pub mod dasha;
+pub mod dignity;

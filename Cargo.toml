@@ -14,16 +14,17 @@ crate-type = ["cdylib", "rlib"]
 members = []
 
 [dependencies]
-swisseph-wasm = "0.1.5"
 wasm-bindgen = "0.2.106"
 js-sys = "0.3.83"
 chrono = { version = "0.4.42", features = ["serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
-spa = "0.5.1"
+
 # libc and libm were for internal C shims, potentially still needed for other reasons or can be removed if strictly delegation
 libc = "0.2.180"
 libm = "0.2.15"
+
+swiss-eph = { path = "../swiss-eph/crates/swiss-eph" }
 
 # Build dependencies are no longer needed for compilation of C code here, BUT 
 # if we rely on the sub-crate to build the C code, good.

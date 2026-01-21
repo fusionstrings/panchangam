@@ -6,6 +6,7 @@ use serde::{Serialize, Deserialize};
 use alloc::string::{String, ToString};
 use crate::astronomy::planets::moon_longitude;
 use crate::astronomy::ayanamsha::{AyanamshaMode, get_ayanamsha, tropical_to_sidereal};
+use crate::astronomy::solver::find_angle_crossing;
 
 /// Nakshatra names (27 lunar mansions)
 pub const NAKSHATRA_NAMES: [&str; 27] = [
@@ -82,29 +83,48 @@ pub fn calculate_nakshatra(jd: f64, ayanamsha_mode: AyanamshaMode) -> NakshatraI
 }
 
 /// Calculate Julian Day when Moon transitions to next Nakshatra
+#[wasm_bindgen]
 pub fn nakshatra_end_time(jd: f64, ayanamsha_mode: AyanamshaMode) -> f64 {
     let current = calculate_nakshatra(jd, ayanamsha_mode);
     let nakshatra_span = 360.0 / 27.0;
     let target_long = current.index as f64 * nakshatra_span; // End of current Nakshatra
     
-    // Iterative solver
-    let mut search_jd = jd;
-    for _ in 0..20 {
-        let moon_tropical = moon_longitude(search_jd);
-        let ayanamsha = get_ayanamsha(ayanamsha_mode, search_jd);
-        let moon_sidereal = tropical_to_sidereal(moon_tropical, ayanamsha);
-        
-        let error = target_long - moon_sidereal;
-        let error = if error < -180.0 { error + 360.0 } else if error > 180.0 { error - 360.0 } else { error };
-        
-        if error.abs() < 0.001 {
-            break;
-        }
-        
-        // Moon moves ~13.2 deg/day
-        let step = error / 13.2;
-        search_jd += step;
-    }
+    // Moon moves ~13.2 deg/day. 1 Nakshatra ~ 1 day. Search 1.2 days ahead.
+    let start_search = jd;
+    let end_search = jd + 1.2;
     
-    search_jd
+    find_angle_crossing(
+        |t| {
+            let mt = moon_longitude(t);
+            let ayan = get_ayanamsha(ayanamsha_mode, t);
+            tropical_to_sidereal(mt, ayan)
+        },
+        start_search,
+        end_search,
+        target_long
+    ).unwrap_or(jd)
+}
+
+/// Calculate Julian Day when current Nakshatra started
+#[wasm_bindgen]
+pub fn nakshatra_start_time(jd: f64, ayanamsha_mode: AyanamshaMode) -> f64 {
+    let current = calculate_nakshatra(jd, ayanamsha_mode);
+    let nakshatra_span = 360.0 / 27.0;
+    // Start of current is end of previous (index - 1)
+    let target_long = (current.index as f64 - 1.0) * nakshatra_span;
+    
+    // Search backward 1.2 days
+    let start_search = jd - 1.2;
+    let end_search = jd;
+    
+    find_angle_crossing(
+        |t| {
+            let mt = moon_longitude(t);
+            let ayan = get_ayanamsha(ayanamsha_mode, t);
+            tropical_to_sidereal(mt, ayan)
+        },
+        start_search,
+        end_search,
+        target_long
+    ).unwrap_or(jd)
 }

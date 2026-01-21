@@ -16,6 +16,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct Constants;
 
+#[allow(non_snake_case)]
 #[wasm_bindgen]
 impl Constants {
     // ========================================================================

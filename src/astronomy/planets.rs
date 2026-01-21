@@ -14,6 +14,7 @@ pub struct PlanetData {
     pub speed: f64,
     pub is_retrograde: bool,
     pub is_combust: bool,
+    pub dignity: crate::vedic::dignity::Dignity,
 }
 
 #[derive(Clone, Copy)]
@@ -29,10 +30,9 @@ pub enum PlanetId {
 }
 
 /// Calculate Julian Day from calendar date
+/// Calculate Julian Day from calendar date
 pub fn julian_day(year: i32, month: u32, day: u32, hour: f64) -> f64 {
-    unsafe {
-        crate::swe_bindings::swe_julday(year, month as i32, day as i32, hour, crate::swe_bindings::SE_GREG_CAL as i32)
-    }
+    swiss_eph::safe::julday(year, month as i32, day as i32, hour)
 }
 
 pub fn get_planet_positions_bulk(jd: f64, ayanamsha_val: f64) -> alloc::vec::Vec<PlanetData> {
@@ -47,18 +47,36 @@ pub fn get_planet_positions_bulk(jd: f64, ayanamsha_val: f64) -> alloc::vec::Vec
     // First pass: get all raw data
     let mut raw_positions = alloc::vec::Vec::new();
     for (id, name) in planet_ids {
-        let mut xx = [0.0; 6];
-        let mut serr = [0i8; 256];
-        let flags = 2 | 256; // SEFLG_SWIEPH | SEFLG_SPEED
+        let planet = match id {
+            0 => swiss_eph::safe::Planet::Sun,
+            1 => swiss_eph::safe::Planet::Moon,
+            2 => swiss_eph::safe::Planet::Mercury,
+            3 => swiss_eph::safe::Planet::Venus,
+            4 => swiss_eph::safe::Planet::Mars,
+            5 => swiss_eph::safe::Planet::Jupiter,
+            6 => swiss_eph::safe::Planet::Saturn,
+            10 => swiss_eph::safe::Planet::MeanNode,
+            _ => swiss_eph::safe::Planet::Sun, // Should not happen
+        };
+
+        let flags = swiss_eph::safe::CalcFlags::new()
+            .with_swiss_ephemeris()
+            .with_speed();
         
-        unsafe {
-            crate::swe_bindings::swe_calc_ut(jd, id, flags, xx.as_mut_ptr(), serr.as_mut_ptr());
-        }
+        let pos = swiss_eph::safe::calc(jd, planet, flags)
+             .unwrap_or(swiss_eph::safe::Position {
+                 longitude: 0.0, latitude: 0.0, distance: 0.0,
+                 longitude_speed: 0.0, latitude_speed: 0.0, distance_speed: 0.0 
+             });
         
-        let mut sid_lon = xx[0] - ayanamsha_val;
+        // Note: calc returns Tropical usually. If we want Sidereal we subtract ayanamsha.
+        // Existing code: `xx[0] - ayanamsha_val`.
+        // So we just take pos.longitude.
+        
+        let mut sid_lon = pos.longitude - ayanamsha_val;
         if sid_lon < 0.0 { sid_lon += 360.0; }
         
-        raw_positions.push((name, sid_lon % 360.0, xx[1], xx[2], xx[3]));
+        raw_positions.push((name, sid_lon % 360.0, pos.latitude, pos.distance, pos.longitude_speed));
     }
 
     let sun_lon = raw_positions[0].1;
@@ -80,6 +98,9 @@ pub fn get_planet_positions_bulk(jd: f64, ayanamsha_val: f64) -> alloc::vec::Vec
             _ => false,
         };
 
+        let sign_index = (lon / 30.0).floor() as u8 + 1;
+        let dignity = crate::vedic::dignity::calculate_dignity(name, sign_index);
+
         planets.push(PlanetData {
             name: name.to_string(),
             longitude: lon,
@@ -88,6 +109,7 @@ pub fn get_planet_positions_bulk(jd: f64, ayanamsha_val: f64) -> alloc::vec::Vec
             speed: speed,
             is_retrograde: is_retro,
             is_combust,
+            dignity,
         });
     }
 
@@ -103,6 +125,7 @@ pub fn get_planet_positions_bulk(jd: f64, ayanamsha_val: f64) -> alloc::vec::Vec
         speed: planets[rahu_idx].speed,
         is_retrograde: planets[rahu_idx].is_retrograde,
         is_combust: false,
+        dignity: crate::vedic::dignity::Dignity::Neutral,
     });
 
     planets
@@ -116,55 +139,88 @@ pub struct PlanetPos {
     pub speed: f64,
 }
 
-pub fn get_planet_position_sidereal(planet: PlanetId, jd: f64, ayanamsha_val: f64) -> PlanetPos {
-    let mut xx = [0.0; 6];
-    let mut serr = [0i8; 256];
-    let flags = swe_bindings::SEFLG_SWIEPH | swe_bindings::SEFLG_SPEED;
+pub fn get_planet_position_sidereal(planet_id: PlanetId, jd: f64, ayanamsha_val: f64) -> PlanetPos {
+    let planet = match planet_id {
+        PlanetId::Sun => swiss_eph::safe::Planet::Sun,
+        PlanetId::Moon => swiss_eph::safe::Planet::Moon,
+        PlanetId::Mercury => swiss_eph::safe::Planet::Mercury,
+        PlanetId::Venus => swiss_eph::safe::Planet::Venus,
+        PlanetId::Mars => swiss_eph::safe::Planet::Mars,
+        PlanetId::Jupiter => swiss_eph::safe::Planet::Jupiter,
+        PlanetId::Saturn => swiss_eph::safe::Planet::Saturn,
+        PlanetId::Rahu => swiss_eph::safe::Planet::MeanNode,
+    };
     
-    unsafe {
-        swe_bindings::swe_calc_ut(jd, planet as i32, flags as i32, xx.as_mut_ptr(), serr.as_mut_ptr());
-    }
+    let flags = swiss_eph::safe::CalcFlags::new()
+        .with_swiss_ephemeris()
+        .with_speed();
     
-    let mut sid_lon = xx[0] - ayanamsha_val;
+    let pos = swiss_eph::safe::calc(jd, planet, flags)
+         .unwrap_or(swiss_eph::safe::Position {
+             longitude: 0.0, latitude: 0.0, distance: 0.0,
+             longitude_speed: 0.0, latitude_speed: 0.0, distance_speed: 0.0 
+         });
+    
+    let mut sid_lon = pos.longitude - ayanamsha_val;
     if sid_lon < 0.0 { sid_lon += 360.0; }
     
     PlanetPos {
         longitude: sid_lon,
-        latitude: xx[1],
-        distance: xx[2],
-        speed: xx[3],
+        latitude: pos.latitude,
+        distance: pos.distance,
+        speed: pos.longitude_speed,
     }
 }
 
 
 /// Calculate planetary position returning longitude
 fn calculate_planet(jd: f64, planet_id: i32) -> f64 {
-    let mut xx = [0.0; 6];
-    let mut serr = [0i8; 256];
-    let flags = swe_bindings::SEFLG_SWIEPH | swe_bindings::SEFLG_SPEED;
+    // Note: planet_id here comes from swe_bindings constants used in sun/moon_longitude below
+    // We should map it or use raw `calc_ut` if we want to support any ID?
+    // Using simple mapping:
+    let planet = match planet_id {
+        0 => swiss_eph::safe::Planet::Sun,
+        1 => swiss_eph::safe::Planet::Moon,
+        _ => swiss_eph::safe::Planet::Sun, // Fallback
+    };
+
+    let flags = swiss_eph::safe::CalcFlags::new()
+        .with_swiss_ephemeris()
+        .with_speed();
     
-    unsafe {
-        swe_bindings::swe_calc_ut(jd, planet_id, flags as i32, xx.as_mut_ptr(), serr.as_mut_ptr());
-    }
+    let pos = swiss_eph::safe::calc(jd, planet, flags)
+        .unwrap_or(swiss_eph::safe::Position {
+             longitude: 0.0, latitude: 0.0, distance: 0.0,
+             longitude_speed: 0.0, latitude_speed: 0.0, distance_speed: 0.0 
+        });
     
-    // xx[0] is longitude
-    let mut long = xx[0];
+    let mut long = pos.longitude;
     if long < 0.0 { long += 360.0; }
     long % 360.0
 }
 
 /// Calculate planet magnitude (brightness)
 pub fn get_planet_magnitude(planet: PlanetId, jd: f64) -> f64 {
-    let mut attr = [0.0; 20];
-    let mut serr = [0i8; 256];
-    let flags = swe_bindings::SEFLG_SWIEPH; // No speed needed for magnitude
+    let swe_planet = match planet {
+        PlanetId::Sun => swiss_eph::safe::Planet::Sun,
+        PlanetId::Moon => swiss_eph::safe::Planet::Moon,
+        PlanetId::Mercury => swiss_eph::safe::Planet::Mercury,
+        PlanetId::Venus => swiss_eph::safe::Planet::Venus,
+        PlanetId::Mars => swiss_eph::safe::Planet::Mars,
+        PlanetId::Jupiter => swiss_eph::safe::Planet::Jupiter,
+        PlanetId::Saturn => swiss_eph::safe::Planet::Saturn,
+        PlanetId::Rahu => swiss_eph::safe::Planet::MeanNode,
+    };
     
-    unsafe {
-        swe_bindings::swe_pheno_ut(jd, planet as i32, flags as i32, attr.as_mut_ptr(), serr.as_mut_ptr());
+    let flags = swiss_eph::safe::CalcFlags::new()
+        .with_swiss_ephemeris();
+    
+    let pheno = swiss_eph::safe::phenomena(jd, swe_planet, flags);
+    
+    match pheno {
+        Ok(p) => p.magnitude,
+        Err(_) => 0.0,
     }
-    
-    // attr[4] is visual magnitude
-    attr[4]
 }
 
 /// Calculate Sun's geocentric ecliptic longitude (degrees)
@@ -179,13 +235,11 @@ pub fn moon_longitude(jd: f64) -> f64 {
 
 /// Calculate Moon's illumination fraction (0.0 to 1.0)
 pub fn moon_illumination(jd: f64) -> f64 {
-    let mut xmas = [0.0; 6];
-    let mut serr = [0i8; 256];
+    let flags = swiss_eph::safe::CalcFlags::new().with_swiss_ephemeris();
+    let pheno = swiss_eph::safe::phenomena(jd, swiss_eph::safe::Planet::Moon, flags);
     
-    unsafe {
-        swe_bindings::swe_pheno_ut(jd, swe_bindings::SE_MOON as i32, swe_bindings::SEFLG_SWIEPH as i32, xmas.as_mut_ptr(), serr.as_mut_ptr());
+    match pheno {
+        Ok(p) => p.phase,
+        Err(_) => 0.0,
     }
-    
-    // xmas[1] is phase (illumination fraction)
-    xmas[1]
 }

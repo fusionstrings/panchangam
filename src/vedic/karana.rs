@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
 use alloc::string::ToString;
 use crate::astronomy::planets::{sun_longitude, moon_longitude};
+use crate::astronomy::solver::find_angle_crossing;
 
 /// Fixed Karanas (occur once per lunar month at specific positions)
 pub const FIXED_KARANAS: [&str; 4] = ["Shakuni", "Chatushpada", "Naga", "Kimstughna"];
@@ -64,4 +65,52 @@ pub fn calculate_karana(jd: f64) -> KaranaInfo {
         name,
         half,
     }
+}
+
+/// Calculate Julian Day when current Karana ends
+#[wasm_bindgen]
+pub fn karana_end_time(jd: f64) -> f64 {
+    let current = calculate_karana(jd);
+    let target_angle = current.index as f64 * 6.0;
+
+    // Search window: Karana is ~0.5 days. Search 0.6 days ahead.
+    let start_search = jd;
+    let end_search = jd + 0.6;
+
+    find_angle_crossing(
+        |t| {
+            let sl = sun_longitude(t);
+            let ml = moon_longitude(t);
+            let mut diff = ml - sl;
+            if diff < 0.0 { diff += 360.0; }
+            diff
+        },
+        start_search,
+        end_search,
+        target_angle
+    ).unwrap_or(jd)
+}
+
+/// Calculate Julian Day when current Karana started
+#[wasm_bindgen]
+pub fn karana_start_time(jd: f64) -> f64 {
+    let current = calculate_karana(jd);
+    let target_angle = (current.index as f64 - 1.0) * 6.0;
+
+    // Search window: Karana is ~0.5 days. Search 0.6 days backward.
+    let start_search = jd - 0.6;
+    let end_search = jd;
+
+    find_angle_crossing(
+        |t| {
+            let sl = sun_longitude(t);
+            let ml = moon_longitude(t);
+            let mut diff = ml - sl;
+            if diff < 0.0 { diff += 360.0; }
+            diff
+        },
+        start_search,
+        end_search,
+        target_angle
+    ).unwrap_or(jd)
 }

@@ -1,7 +1,6 @@
 //! Ayanamsha calculations using Swiss Ephemeris
 
 use wasm_bindgen::prelude::*;
-use crate::swe_bindings;
 
 /// Ayanamsha modes
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -46,12 +45,22 @@ impl AyanamshaMode {
 }
 
 /// Get Ayanamsha value for a given mode and Julian Day
+/// Get Ayanamsha value for a given mode and Julian Day
 #[wasm_bindgen]
 pub fn get_ayanamsha(mode: AyanamshaMode, jd: f64) -> f64 {
-    unsafe {
-        swe_bindings::swe_set_sid_mode(mode.to_swe_mode(), 0.0, 0.0);
-        swe_bindings::swe_get_ayanamsa_ut(jd)
-    }
+    let swe_mode = match mode {
+        AyanamshaMode::FaganBradley => swiss_eph::safe::SiderealMode::FaganBradley,
+        AyanamshaMode::Lahiri => swiss_eph::safe::SiderealMode::Lahiri,
+        AyanamshaMode::DeLuce => swiss_eph::safe::SiderealMode::DeLuce,
+        AyanamshaMode::Raman => swiss_eph::safe::SiderealMode::Raman,
+        AyanamshaMode::Krishnamurti => swiss_eph::safe::SiderealMode::Krishnamurti,
+        AyanamshaMode::Yukteshwar => swiss_eph::safe::SiderealMode::Yukteshwar,
+        AyanamshaMode::JNBhasin => swiss_eph::safe::SiderealMode::JNBhasin,
+        AyanamshaMode::TrueCitra => swiss_eph::safe::SiderealMode::TrueCitra,
+    };
+
+    swiss_eph::safe::set_sidereal_mode(swe_mode);
+    swiss_eph::safe::get_ayanamsa(jd)
 }
 
 /// Convert tropical (sayana) longitude to sidereal (nirayana)

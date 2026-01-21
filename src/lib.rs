@@ -12,16 +12,16 @@
 
 #![no_std]
 extern crate alloc;
-use alloc::string::{String, ToString};
-use swisseph_wasm; // Ensure it's linked
+use alloc::string::String;
+use swiss_eph; // Ensure it's linked
 
 
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 
 // Include generated Swiss Ephemeris bindings
-// Re-export bindings from swisseph-wasm
-pub(crate) use swisseph_wasm::swe_bindings;
+// Re-export bindings from swiss-eph
+pub(crate) use swiss_eph as swe_bindings;
 
 
 
