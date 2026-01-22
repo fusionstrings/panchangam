@@ -1,7 +1,7 @@
 {
   "tasks": {
-    "build": "deno run -A @deno/wasmbuild -p panchangam --out lib",
-    "build:inline": "deno run -A @deno/wasmbuild --inline -p panchangam --out lib/browser",
+    "build": "deno run -A scripts/build.ts --out lib",
+    "build:inline": "deno run -A scripts/build.ts --inline --out lib/browser",
     "build:npm": "deno run -A scripts/build_npm.ts",
     "bump-version": "deno run -A scripts/version_bump.ts",
     "check-version": "deno run -A scripts/check_version.ts",

@@ -38,15 +38,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y llvm clang
 
+      - name: Install WASI SDK
+        run: |
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
+          tar xvf wasi-sdk-24.0-x86_64-linux.tar.gz
+          echo "WASI_SDK_PATH=$PWD/wasi-sdk-24.0" >> $GITHUB_ENV
+
       - name: Build WASM
         run: deno task build
-        env:
-          CC: clang
 
       - name: Build Browser WASM
         run: deno task build:inline
-        env:
-          CC: clang
 
       - name: Run Tests
         run: deno task test

@@ -9,10 +9,6 @@ repository = "https://github.com/fusionstrings/panchangam"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-
-
-
-
 [dependencies]
 wasm-bindgen = "0.2.106"
 js-sys = "0.3.83"
@@ -20,13 +16,11 @@ chrono = { version = "0.4.42", features = ["serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
 
-# libc and libm were for internal C shims, potentially still needed for other reasons or can be removed if strictly delegation
+# libc and libm were for internal C shims, potentially still needed for other reasons
 libc = "0.2.180"
 libm = "0.2.15"
 
-swiss-eph = { path = "../swiss-eph/crates/swiss-eph" }
+swiss-eph = "0.2.1"
 
-# Build dependencies are no longer needed for compilation of C code here, BUT 
-# if we rely on the sub-crate to build the C code, good.
-# However, we should remove the cc/bindgen from HERE if we are not building C code in THIS crate.
-
+[workspace]
+members = ["."]
