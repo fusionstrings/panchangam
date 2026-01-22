@@ -42,7 +42,7 @@ jobs:
         run: |
           wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
           tar xvf wasi-sdk-24.0-x86_64-linux.tar.gz
-          echo "WASI_SDK_PATH=$PWD/wasi-sdk-24.0" >> $GITHUB_ENV
+          echo "WASI_SDK_PATH=$PWD/wasi-sdk-24.0-x86_64-linux" >> $GITHUB_ENV
 
       - name: Build WASM
         run: deno task build
