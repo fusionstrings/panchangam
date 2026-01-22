@@ -134,5 +134,19 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
     vedic::dasha::calculate_vimshottari(moon_long, birth_time_ms, current_time_ms)
 }
 
+/// Calculate Julian Day number
+/// 
+/// # Arguments
+/// * `year` - Year
+/// * `month` - Month
+/// * `day` - Day
+/// * `hour` - Hour
+/// * `gregflag` - Calendar flag (1 = Gregorian, 0 = Julian)
+#[wasm_bindgen]
+pub fn julday(year: i32, month: i32, day: i32, hour: f64, gregflag: i32) -> f64 {
+    unsafe {
+        swe_bindings::swe_julday(year, month, day, hour, gregflag)
+    }
+}
 
 

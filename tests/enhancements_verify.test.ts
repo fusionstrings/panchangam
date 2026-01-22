@@ -4,8 +4,8 @@ import {
   calculate_houses,
   calculate_vimshottari,
   Constants,
+  julday,
   Location,
-  swe_julday,
   tithi_end_time,
   tithi_start_time,
 } from "../lib/panchangam.js";
@@ -13,7 +13,7 @@ import {
 // Basic config
 const date = { year: 2026, month: 1, day: 18, hour: 12.0 };
 const loc = new Location(28.6139, 77.2090, 0); // New Delhi
-const jd = swe_julday(
+const jd = julday(
   date.year,
   date.month,
   date.day,
