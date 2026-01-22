@@ -48,6 +48,9 @@ const cmd = new Deno.Command(Deno.execPath(), {
   args,
   stdout: "inherit",
   stderr: "inherit",
+  env: {
+    "WASI_SDK_PATH": Deno.env.get("WASI_SDK_PATH")!,
+  },
 });
 
 const status = await cmd.spawn().status;
