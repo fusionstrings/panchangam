@@ -9,7 +9,7 @@
     "bench": "deno bench -A"
   },
   "name": "@fusionstrings/panchangam",
-  "version": "0.1.2",
+  "version": "0.2.1",
   "license": "MIT",
   "exports": {
     ".": "./lib/panchangam.js",

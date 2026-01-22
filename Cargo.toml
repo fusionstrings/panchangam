@@ -1,6 +1,6 @@
 [package]
 name = "panchangam"
-version = "0.1.2"
+version = "0.2.1"
 edition = "2024"
 description = "High-precision Vedic Panchangam calculations using Swiss Ephemeris"
 license = "MIT"
