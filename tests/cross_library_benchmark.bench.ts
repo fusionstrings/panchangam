@@ -8,7 +8,7 @@ import {
   Constants,
   createSwissEph,
 } from "@fusionstrings/swisseph-wasi/browser";
-import { swe_calc_ut, swe_julday } from "../lib/panchangam.js";
+import { p_calc_ut, p_julday } from "../lib/panchangam.js";
 
 const ITERATIONS = 1000;
 const J2000 = 2451545.0;
@@ -23,7 +23,7 @@ console.log("=".repeat(60));
 
 // Benchmark 1: Julian Day calculation
 Deno.bench("swisseph-wasm: swe_julday", () => {
-  swe_julday(2000, 1, 1, 12.0, 1);
+  p_julday(2000, 1, 1, 12.0, 1);
 });
 
 Deno.bench("swisseph-wasi: swe_julday", () => {
@@ -32,7 +32,7 @@ Deno.bench("swisseph-wasi: swe_julday", () => {
 
 // Benchmark 2: Sun position
 Deno.bench("swisseph-wasm: Sun position", () => {
-  swe_calc_ut(J2000, 0, 2);
+  p_calc_ut(J2000, 0, 2);
 });
 
 Deno.bench("swisseph-wasi: Sun position", () => {
@@ -41,7 +41,7 @@ Deno.bench("swisseph-wasi: Sun position", () => {
 
 // Benchmark 3: Moon position (more complex)
 Deno.bench("swisseph-wasm: Moon position", () => {
-  swe_calc_ut(J2000, 1, 2);
+  p_calc_ut(J2000, 1, 2);
 });
 
 Deno.bench("swisseph-wasi: Moon position", () => {
@@ -51,7 +51,7 @@ Deno.bench("swisseph-wasi: Moon position", () => {
 // Benchmark 4: All planets in single call
 Deno.bench("swisseph-wasm: All 7 planets", () => {
   for (let planet = 0; planet <= 6; planet++) {
-    swe_calc_ut(J2000, planet, 2);
+    p_calc_ut(J2000, planet, 2);
   }
 });
 

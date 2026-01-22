@@ -64,9 +64,20 @@ pub fn calculate_houses(
         _ => swiss_eph::safe::HouseSystem::Placidus, // Default fallback
     };
 
-    // Calculate Tropical Houses
-    let houses = swiss_eph::safe::houses(jd, lat, lon, sys)
-        .map_err(|e| JsValue::from_str(&e.message))?;
+    // Calculate Tropical Houses with fallback
+    let mut houses_res = swiss_eph::safe::houses(jd, lat, lon, sys);
+    
+    // Fallback logic for high latitudes or failures (e.g., Placidus at poles)
+    if houses_res.is_err() {
+        // Try Porphyrius ('O')
+        houses_res = swiss_eph::safe::houses(jd, lat, lon, swiss_eph::safe::HouseSystem::Porphyrius);
+    }
+    if houses_res.is_err() {
+        // Try Equal ('E')
+        houses_res = swiss_eph::safe::houses(jd, lat, lon, swiss_eph::safe::HouseSystem::Equal);
+    }
+
+    let houses = houses_res.map_err(|e| JsValue::from_str(&e.message))?;
 
     let mut asc_deg = houses.ascendant;
     let mut mc_deg = houses.mc;
@@ -84,23 +95,31 @@ pub fn calculate_houses(
         
         asc_deg = (asc_deg - ayan + 360.0) % 360.0;
         mc_deg = (mc_deg - ayan + 360.0) % 360.0;
-        // ARMC is Sidereal Time (RAMC), usually not adjusted by Ayanamsha in the same way as longitude?
-        // Wait, ARMC is Right Ascension of MC. 
-        // If we want Sidereal positions, we adjust Ecliptic Longitudes (Asc, MC, Cusps, Vertex?).
-        // Vertex is on Ecliptic? Yes.
-        // Eq Asc? 
-        // The manual code only adjusted Asc and MC:
-        // asc_deg = (asc_deg - ayan + 360.0) % 360.0;
-        // mc_deg = (mc_deg - ayan + 360.0) % 360.0;
-        // And then recalculated cusps based on new Asc (for Equal/Whole).
-        
-        // Since we are using swiss-eph which gives us all cusps:
-        // We should adjust ALL ecliptic longitudes.
         vertex = (vertex - ayan + 360.0) % 360.0;
         
-        // Adjust cusps
-        for i in 0..12 {
-            cusps_vec[i] = (cusps_vec[i] - ayan + 360.0) % 360.0;
+        // For logic-based house systems, we must recalculate cusps based on Sidereal Ascendant
+        // because subtracting ayanamsha from Tropical cusps is geometrically incorrect for Bound/Sign logic.
+        match hsys {
+            'W' => {
+                // Whole Sign: Cusp 1 is 0 degrees of the sign containing Ascendant
+                let sign_start = (asc_deg / 30.0).floor() * 30.0;
+                for i in 0..12 {
+                    cusps_vec[i] = (sign_start + (i as f64) * 30.0) % 360.0;
+                }
+            },
+            'E' => {
+                // Equal House: Cusp 1 = Ascendant
+                for i in 0..12 {
+                    cusps_vec[i] = (asc_deg + (i as f64) * 30.0) % 360.0;
+                }
+            },
+            _ => {
+                // For geometric systems (Placidus, Koch, etc.), simply shifting the longitude is correct
+                // as they are defined by intersection points on the ecliptic.
+                for i in 0..12 {
+                    cusps_vec[i] = (cusps_vec[i] - ayan + 360.0) % 360.0;
+                }
+            }
         }
         
     }

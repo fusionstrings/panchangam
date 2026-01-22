@@ -4,7 +4,7 @@ import {
   calculate_vimshottari,
   Constants,
   Location,
-  swe_julday,
+  p_julday,
   tithi_end_time,
   tithi_start_time,
 } from "../lib/panchangam.js";
@@ -58,7 +58,7 @@ Deno.test("Tithi: 30th Tithi (Amavasya) Boundary", () => {
 
   // Find a known Amavasya
   // 2026-01-18 is Amavasya (idx 30)
-  const jd = swe_julday(2026, 1, 19, 0, Constants.SE_GREG_CAL);
+  const jd = p_julday(2026, 1, 19, 0, Constants.SE_GREG_CAL);
   const start = tithi_start_time(jd);
 
   // Ensure start calculation didn't loop infinitely or fail

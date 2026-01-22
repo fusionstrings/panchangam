@@ -2,7 +2,7 @@ import {
   assertArrayIncludes,
   assertEquals,
   assertNotEquals,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+} from "@std/assert";
 import {
   calculate_daily_panchang,
   calculate_houses,
@@ -16,19 +16,19 @@ const jd = 2461059.0; // 2026-01-18 12:00 UT
 
 Deno.test("Deep Audit: Ayanamsha Modes & IDs", () => {
   // Lahiri should be 1
-  assertEquals(Constants.SE_SIDM_LAHIRI(), 1);
-  assertEquals(Constants.SE_SIDM_RAMAN(), 3);
-  assertEquals(Constants.SE_SIDM_KRISHNAMURTI(), 5);
-  assertEquals(Constants.SE_SIDM_YUKTESHWAR(), 7);
-  assertEquals(Constants.SE_SIDM_JN_BHASIN(), 8);
-  assertEquals(Constants.SE_SIDM_FAGAN_BRADLEY(), 0);
+  assertEquals(Constants.SE_SIDM_LAHIRI, 1);
+  assertEquals(Constants.SE_SIDM_RAMAN, 3);
+  assertEquals(Constants.SE_SIDM_KRISHNAMURTI, 5);
+  assertEquals(Constants.SE_SIDM_YUKTESHWAR, 7);
+  assertEquals(Constants.SE_SIDM_JN_BHASIN, 8);
+  assertEquals(Constants.SE_SIDM_FAGAN_BRADLEY, 0);
 
   // Test that different modes produce different planetary longitudes
-  const pLahiri = calculate_planets(jd, Constants.SE_SIDM_LAHIRI());
-  const pRaman = calculate_planets(jd, Constants.SE_SIDM_RAMAN());
+  const pLahiri = calculate_planets(jd, Constants.SE_SIDM_LAHIRI);
+  const pRaman = calculate_planets(jd, Constants.SE_SIDM_RAMAN);
 
-  const sunLahiri = pLahiri.find((p) => p.name === "Sun").longitude;
-  const sunRaman = pRaman.find((p) => p.name === "Sun").longitude;
+  const sunLahiri = pLahiri.find((p: any) => p.name === "Sun").longitude;
+  const sunRaman = pRaman.find((p: any) => p.name === "Sun").longitude;
 
   assertNotEquals(sunLahiri, sunRaman);
 });
@@ -40,14 +40,14 @@ Deno.test("Deep Audit: Whole Sign Houses", () => {
     loc.latitude,
     loc.longitude,
     "P",
-    Constants.SE_SIDM_LAHIRI(),
+    Constants.SE_SIDM_LAHIRI,
   );
   const hWhole = calculate_houses(
     jd,
     loc.latitude,
     loc.longitude,
     "W",
-    Constants.SE_SIDM_LAHIRI(),
+    Constants.SE_SIDM_LAHIRI,
   );
 
   const asc = hEqual.ascendant;
@@ -59,9 +59,9 @@ Deno.test("Deep Audit: Whole Sign Houses", () => {
 });
 
 Deno.test("Deep Audit: Planet Status (Retrograde/Combust)", () => {
-  const planets = calculate_planets(jd, Constants.SE_SIDM_LAHIRI());
+  const planets = calculate_planets(jd, Constants.SE_SIDM_LAHIRI);
 
-  planets.forEach((p) => {
+  planets.forEach((p: any) => {
     console.log(
       `${p.name}: Lon=${
         p.longitude.toFixed(2)
@@ -69,16 +69,16 @@ Deno.test("Deep Audit: Planet Status (Retrograde/Combust)", () => {
     );
   });
 
-  const sun = planets.find((p) => p.name === "Sun");
-  const moon = planets.find((p) => p.name === "Moon");
+  const sun = planets.find((p: any) => p.name === "Sun");
+  const moon = planets.find((p: any) => p.name === "Moon");
 
   // Sun is never combust or retrograde
   assertEquals(sun.is_retrograde, false);
   assertEquals(sun.is_combust, false);
 
   // Rahu/Ketu should have same retrograde status
-  const rahu = planets.find((p) => p.name === "Rahu");
-  const ketu = planets.find((p) => p.name === "Ketu");
+  const rahu = planets.find((p: any) => p.name === "Rahu");
+  const ketu = planets.find((p: any) => p.name === "Ketu");
   assertEquals(rahu.is_retrograde, ketu.is_retrograde);
   assertEquals(
     Math.abs((rahu.longitude + 180) % 360 - ketu.longitude) < 0.001,
@@ -92,14 +92,14 @@ Deno.test("Deep Audit: Daily Panchang Planetary Snapshot", () => {
     1,
     18,
     loc,
-    Constants.SE_SIDM_LAHIRI(),
+    Constants.SE_SIDM_LAHIRI,
   );
 
-  assertNotEquals(p.planets, undefined);
-  assertEquals(Array.isArray(p.planets), true);
-  assertEquals(p.planets.length, 9); // 7 planets + Rahu + Ketu
+  assertNotEquals((p as any).planets, undefined);
+  assertEquals(Array.isArray((p as any).planets), true);
+  assertEquals((p as any).planets.length, 9); // 7 planets + Rahu + Ketu
 
-  const sun = p.planets.find((pl) => pl.name === "Sun");
+  const sun = (p as any).planets.find((pl: any) => pl.name === "Sun");
   assertEquals(sun !== undefined, true);
   console.log("Sun at Sunrise:", sun.longitude);
 });

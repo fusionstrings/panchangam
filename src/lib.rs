@@ -143,10 +143,47 @@ pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms
 /// * `hour` - Hour
 /// * `gregflag` - Calendar flag (1 = Gregorian, 0 = Julian)
 #[wasm_bindgen]
-pub fn julday(year: i32, month: i32, day: i32, hour: f64, gregflag: i32) -> f64 {
+pub fn p_julday(year: i32, month: i32, day: i32, hour: f64, gregflag: i32) -> f64 {
     unsafe {
         swe_bindings::swe_julday(year, month, day, hour, gregflag)
     }
 }
 
 
+
+#[derive(Serialize)]
+pub struct PlanetaryPosition {
+    pub longitude: f64,
+    pub latitude: f64,
+    pub distance: f64,
+    pub speed_long: f64,
+    pub speed_lat: f64,
+    pub speed_dist: f64,
+}
+
+/// Calculate planetary position (UT)
+/// 
+/// Returns simple struct with longitude, latitude, distance, speed values.
+#[wasm_bindgen]
+pub fn p_calc_ut(tjd_ut: f64, ipl: i32, iflag: i32) -> Result<JsValue, JsValue> {
+    let mut xx = [0.0; 6];
+    let mut serr = [0i8; 256];
+    unsafe {
+        let ret_flag = swe_bindings::swe_calc_ut(tjd_ut, ipl, iflag, xx.as_mut_ptr(), serr.as_mut_ptr());
+        if ret_flag < 0 {
+             let c_str = core::ffi::CStr::from_ptr(serr.as_ptr());
+             return Err(JsValue::from_str(c_str.to_str().unwrap_or("Unknown error")));
+        }
+    }
+
+    let result = PlanetaryPosition {
+        longitude: xx[0],
+        latitude: xx[1],
+        distance: xx[2],
+        speed_long: xx[3],
+        speed_lat: xx[4],
+        speed_dist: xx[5],
+    };
+
+    Ok(serde_wasm_bindgen::to_value(&result)?)
+}

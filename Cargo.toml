@@ -20,7 +20,8 @@ serde-wasm-bindgen = "0.6.5"
 libc = "0.2.180"
 libm = "0.2.15"
 
-swiss-eph = "0.2.1"
+swiss-eph = { version = "0.2.1", features = ["embedded-ephe"] }
+serde_json = "1.0.149"
 
 [workspace]
 members = ["."]

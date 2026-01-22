@@ -4,7 +4,7 @@ import {
   get_swisseph_version,
   get_version,
   Location,
-  swe_calc_ut,
+  p_calc_ut,
 } from "../lib/panchangam.js";
 
 Deno.test("Swiss Ephemeris Version", () => {
@@ -40,7 +40,7 @@ Deno.test("Sunrise/Sunset Calculation", () => {
 Deno.test("Planetary Position (Sun)", () => {
   // J2000
   const jd = 2451545.0;
-  const res = swe_calc_ut(jd, 0, 2); // SE_SUN, SEFLG_SWIEPH
+  const res = p_calc_ut(jd, 0, 2); // SE_SUN, SEFLG_SWIEPH
 
   // Sun at J2000 should be near 280 deg longitude (Capricorn)
   // Actually J2000 epoch is defined by standard positions.

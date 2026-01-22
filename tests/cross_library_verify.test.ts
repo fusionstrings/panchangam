@@ -13,7 +13,7 @@ import {
   Constants,
   createSwissEph,
 } from "@fusionstrings/swisseph-wasi/browser";
-import { swe_calc_ut, swe_julday } from "../lib/panchangam.js";
+import { p_calc_ut, p_julday } from "../lib/panchangam.js";
 
 const TOLERANCE = 0.01; // 0.01 degree tolerance
 
@@ -39,7 +39,7 @@ const J2000 = 2451545.0;
 
 // Test 1: Julian Day calculation
 Deno.test("Julian Day calculation matches", () => {
-  const wasmJd = swe_julday(2000, 1, 1, 12.0, 1); // SE_GREG_CAL = 1
+  const wasmJd = p_julday(2000, 1, 1, 12.0, 1); // SE_GREG_CAL = 1
   const wasiJd = swissephWasi.swe_julday(
     2000,
     1,
@@ -58,7 +58,7 @@ Deno.test("Julian Day calculation matches", () => {
 for (const tc of TEST_CASES) {
   Deno.test(`${tc.name}: positions match`, () => {
     // swisseph-wasm (panchangam) - returns { longitude, latitude, ... }
-    const wasmResult = swe_calc_ut(J2000, tc.planet, 2); // SEFLG_SWIEPH = 2
+    const wasmResult = p_calc_ut(J2000, tc.planet, 2); // SEFLG_SWIEPH = 2
     const wasmLongitude = wasmResult.longitude;
 
     // swisseph-wasi - returns { xx: Float64Array } where xx[0] = longitude
@@ -90,8 +90,8 @@ for (const tc of TEST_CASES) {
 
 // Test 3: Edge cases - ancient and future dates
 Deno.test("Ancient date (1000 BCE) calculation", () => {
-  const ancientJd = swe_julday(-1000, 1, 1, 12.0, 1);
-  const wasmSun = swe_calc_ut(ancientJd, Constants.SE_SUN, 2);
+  const ancientJd = p_julday(-1000, 1, 1, 12.0, 1);
+  const wasmSun = p_calc_ut(ancientJd, Constants.SE_SUN, 2);
   const wasiSun = swissephWasi.swe_calc_ut(
     ancientJd,
     Constants.SE_SUN,
@@ -106,8 +106,8 @@ Deno.test("Ancient date (1000 BCE) calculation", () => {
 });
 
 Deno.test("Future date (3000 CE) calculation", () => {
-  const futureJd = swe_julday(3000, 1, 1, 12.0, 1);
-  const wasmSun = swe_calc_ut(futureJd, Constants.SE_SUN, 2);
+  const futureJd = p_julday(3000, 1, 1, 12.0, 1);
+  const wasmSun = p_calc_ut(futureJd, Constants.SE_SUN, 2);
   const wasiSun = swissephWasi.swe_calc_ut(
     futureJd,
     Constants.SE_SUN,
