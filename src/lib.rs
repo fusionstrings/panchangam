@@ -14,6 +14,10 @@
 extern crate alloc;
 use alloc::string::String;
 use swiss_eph; // Ensure it's linked
+use alloc::vec::Vec;
+use alloc::boxed::Box;
+use alloc::vec;
+
 
 
 use wasm_bindgen::prelude::*;
@@ -22,6 +26,13 @@ use serde::{Deserialize, Serialize};
 // Include generated Swiss Ephemeris bindings
 // Re-export bindings from swiss-eph
 pub(crate) use swiss_eph as swe_bindings;
+
+// Re-export Varga types for JS
+pub use vedic::vargas::{VargaType, VargaConfig, VargaPosition, D2Variation, D3Variation, D9Variation, D10Variation};
+// Re-export Shadbala/Jaimini types
+pub use vedic::shadbala::{ShadbalaResult, ShadbalaProfile};
+pub use vedic::jaimini::{KarakaObject, KarakaName, JaiminiProfile, CharaDashaPeriod};
+pub use vedic::ashtakavarga::{AshtakavargaResult, Sarvashtakavarga, ReducedAshtakavarga};
 
 
 
@@ -132,6 +143,187 @@ pub fn calculate_planets(jd: f64, ayan_mode: i32) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn calculate_vimshottari(moon_long: f64, birth_time_ms: f64, current_time_ms: f64) -> vedic::dasha::DashaInfo {
     vedic::dasha::calculate_vimshottari(moon_long, birth_time_ms, current_time_ms)
+}
+
+/// Calculate Yogini Dasha details
+#[wasm_bindgen]
+pub fn calculate_yogini(moon_long: f64, birth_time_ms: f64, current_time_ms: f64) -> vedic::dasha::YoginiInfo {
+    vedic::dasha::calculate_yogini(moon_long, birth_time_ms, current_time_ms)
+}
+
+/// Calculate specific Varga position
+/// Calculate specific Varga position
+/// Calculate specific Varga position
+#[wasm_bindgen]
+pub fn calculate_varga(long: f64, varga_val: i32, config: JsValue) -> Result<VargaPosition, JsValue> {
+    let v_type = match varga_val {
+        1 => VargaType::D1,
+        2 => VargaType::D2,
+        3 => VargaType::D3,
+        4 => VargaType::D4,
+        7 => VargaType::D7,
+        9 => VargaType::D9,
+        10 => VargaType::D10,
+        12 => VargaType::D12,
+        16 => VargaType::D16,
+        20 => VargaType::D20,
+        24 => VargaType::D24,
+        27 => VargaType::D27,
+        30 => VargaType::D30,
+        40 => VargaType::D40,
+        45 => VargaType::D45,
+        60 => VargaType::D60,
+        _ => return Err(JsValue::from_str("Invalid Varga ID")),
+    };
+    
+    let default_conf = VargaConfig::new();
+    let conf: VargaConfig = if config.is_undefined() || config.is_null() {
+        default_conf
+    } else {
+        #[derive(Deserialize)]
+        struct PartialConfig {
+            #[serde(default)]
+            d2_method: Option<i32>,
+            #[serde(default)]
+            d3_method: Option<i32>,
+            #[serde(default)]
+            d9_method: Option<i32>,
+            #[serde(default)]
+            d10_method: Option<i32>,
+        }
+        
+        match serde_wasm_bindgen::from_value::<PartialConfig>(config) {
+            Ok(p) => VargaConfig {
+                d2_method: p.d2_method.unwrap_or(default_conf.d2_method),
+                d3_method: p.d3_method.unwrap_or(default_conf.d3_method),
+                d9_method: p.d9_method.unwrap_or(default_conf.d9_method),
+                d10_method: p.d10_method.unwrap_or(default_conf.d10_method),
+            },
+            Err(e) => return Err(JsValue::from_str(&alloc::format!("Invalid config object: {}", e))),
+        }
+    };
+    
+    Ok(vedic::vargas::calculate_varga_position(long, v_type, &conf))
+}
+
+/// Calculate Shadbala for a single planet (Stub)
+#[wasm_bindgen]
+pub fn calculate_planet_strength(
+    long: f64,
+    planet_id: i32,
+    jd: f64,
+    ascendant: f64
+) -> ShadbalaResult {
+    vedic::shadbala::calculate_planet_shadbala(long, planet_id, jd, ascendant)
+}
+
+/// Calculate Full Shadbala Profile (All 7 planets)
+#[wasm_bindgen]
+pub fn calculate_full_shadbala(
+    planet_longs: &JsValue, 
+    jd: f64, 
+    ascendant: f64
+) -> Result<ShadbalaProfile, JsValue> {
+    let data: Vec<vedic::shadbala::PlanetInput> = serde_wasm_bindgen::from_value(planet_longs.clone())?;
+    Ok(vedic::shadbala::calculate_shadbala_profile(&data, jd, ascendant))
+}
+
+/// Calculate Jaimini Karakas
+#[wasm_bindgen]
+pub fn calculate_jaimini_karakas(
+    planet_longs: &JsValue, // Array of {id, long} objects? Or flat array?
+    use_8_karakas: bool
+) -> Result<Box<[KarakaObject]>, JsValue> {
+    // Parse input array of tuples/objects
+    // For simplicity, accept Float64Array of longitudes indexed by planet ID [0..8]? 
+    // Or accept flexible array.
+    // Let's use simple deserialization of `Vec<(i32, f64)>`?
+    
+    let data: Vec<(i32, f64)> = serde_wasm_bindgen::from_value(planet_longs.clone())?;
+    
+    let karakas = vedic::jaimini::calculate_charakarakas(&data, use_8_karakas);
+    Ok(karakas.into_boxed_slice())
+}
+
+/// Calculate Jaimini Chara Dasha Periods
+#[wasm_bindgen]
+pub fn calculate_chara_dasha_periods(
+    planet_longs: &JsValue,
+    ascendant_sign: i32,
+    start_year: f64
+) -> Result<Box<[CharaDashaPeriod]>, JsValue> {
+    // Parse as tuples (id, f64)
+    let data: Vec<(i32, f64)> = serde_wasm_bindgen::from_value(planet_longs.clone())?;
+    
+    // Ensure all 9 planets for best results
+    let periods = vedic::jaimini::calculate_chara_dasha(&data, ascendant_sign as usize, start_year);
+    Ok(periods.into_boxed_slice())
+}
+
+/// Calculate Sarvashtakavarga (Ashtakavarga Totals)
+
+/// Calculate Sarvashtakavarga (Ashtakavarga Totals)
+#[wasm_bindgen]
+pub fn calculate_ashtakavarga(
+    planet_longs: &JsValue, // Expecting 7 planets longitudes
+    ascendant: f64
+) -> Result<Sarvashtakavarga, JsValue> {
+    // Parse input. List of longitudes? 
+    // Or simpler: array of f64.
+    // The previous Shadbala used PlanetInput objects.
+    // We can reuse that or accept simpler [f64] array if user passes just longitudes.
+    // Consistent with Shadbala, let's accept `Vec<PlanetInput>` or `Vec<f64>`.
+    // Wait, the input logic needs to be robust. 
+    // Let's accept the SAME structure as Shadbala for consistency: Array of objects.
+    // We extract longitudes for id 0..6.
+    
+    let data: Vec<vedic::shadbala::PlanetInput> = serde_wasm_bindgen::from_value(planet_longs.clone())?;
+    
+    // Sort or map 0..6
+    let mut longs = vec![0.0; 7];
+    for p in data {
+        if p.id >= 0 && p.id <= 6 {
+            longs[p.id as usize] = p.longitude;
+        }
+    }
+    
+    Ok(vedic::ashtakavarga::calculate_sarvashtakavarga(&longs, ascendant))
+}
+
+/// Calculate Ashtakavarga Reductions (Trikona & Ekadhipatya)
+#[wasm_bindgen]
+pub fn calculate_reduced_ashtakavarga(
+    bindus: &JsValue, // Int32Array or [numbers]
+    planet_longs: &JsValue // PlanetInput array
+) -> Result<ReducedAshtakavarga, JsValue> {
+    let bindus_vec: Vec<i32> = serde_wasm_bindgen::from_value(bindus.clone())?;
+    
+    if bindus_vec.len() != 12 {
+        return Err(JsValue::from_str("Bindus array must have 12 elements."));
+    }
+    
+    let data: Vec<(i32, f64)> = serde_wasm_bindgen::from_value(planet_longs.clone())?;
+    
+    // We pass the data directly
+    Ok(vedic::ashtakavarga::calculate_reductions(&bindus_vec, &data))
+}
+
+
+// Re-export Yoga types
+pub use vedic::yogas::YogaResult;
+
+/// Find active Yogas (Planetary Combinations)
+#[wasm_bindgen]
+pub fn find_active_yogas(
+    planet_longs: &JsValue,
+    ascendant: f64
+) -> Result<Box<[YogaResult]>, JsValue> {
+    let data: Vec<vedic::shadbala::PlanetInput> = serde_wasm_bindgen::from_value(planet_longs.clone())?;
+    
+    // Convert to slice
+    let yogas = vedic::yogas::check_yogas(&data, ascendant);
+    
+    Ok(yogas.into_boxed_slice())
 }
 
 /// Calculate Julian Day number

@@ -10,3 +10,8 @@ pub mod graha_yuddha;
 pub mod muhurat;
 pub mod dasha;
 pub mod dignity;
+pub mod vargas;
+pub mod shadbala;
+pub mod jaimini;
+pub mod ashtakavarga;
+pub mod yogas;
