@@ -15,3 +15,4 @@ pub mod shadbala;
 pub mod jaimini;
 pub mod ashtakavarga;
 pub mod yogas;
+pub mod special_lagnas;

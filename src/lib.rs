@@ -32,7 +32,8 @@ pub use vedic::vargas::{VargaType, VargaConfig, VargaPosition, D2Variation, D3Va
 // Re-export Shadbala/Jaimini types
 pub use vedic::shadbala::{ShadbalaResult, ShadbalaProfile};
 pub use vedic::jaimini::{KarakaObject, KarakaName, JaiminiProfile, CharaDashaPeriod};
-pub use vedic::ashtakavarga::{AshtakavargaResult, Sarvashtakavarga, ReducedAshtakavarga};
+pub use vedic::ashtakavarga::{AshtakavargaResult, Sarvashtakavarga, ReducedAshtakavarga, PrastaraResult};
+pub use vedic::special_lagnas::SpecialLagnas;
 
 
 
@@ -306,6 +307,35 @@ pub fn calculate_reduced_ashtakavarga(
     
     // We pass the data directly
     Ok(vedic::ashtakavarga::calculate_reductions(&bindus_vec, &data))
+}
+
+/// Calculate Prastara Ashtakavarga (Detailed Grid)
+#[wasm_bindgen]
+pub fn calculate_prastara_ashtakavarga(
+    planet_id: i32,
+    planet_longs: &JsValue,
+    ascendant: f64
+) -> Result<PrastaraResult, JsValue> {
+    let data: Vec<vedic::shadbala::PlanetInput> = serde_wasm_bindgen::from_value(planet_longs.clone())?;
+    let mut longs = vec![0.0; 7];
+    for p in data {
+        if p.id >= 0 && p.id <= 6 {
+            longs[p.id as usize] = p.longitude;
+        }
+    }
+    Ok(vedic::ashtakavarga::calculate_prastara_av(planet_id, &longs, ascendant))
+}
+
+/// Calculate Special Lagnas (Hora, Ghati, Sree Lagna)
+#[wasm_bindgen]
+pub fn calculate_special_lagnas(
+    birth_jd: f64,
+    sunrise_jd: f64,
+    sunrise_sun_long: f64,
+    lagna_long: f64,
+    moon_long: f64
+) -> SpecialLagnas {
+    vedic::special_lagnas::calculate_special_lagnas(birth_jd, sunrise_jd, sunrise_sun_long, lagna_long, moon_long)
 }
 
 

@@ -111,29 +111,91 @@ fn calculate_uchcha_bala(long: f64, planet_id: i32) -> f64 {
 }
 
 fn calculate_saptavargaja_bala(
-    _long: f64, 
-    _planet_id: i32, 
-    _jd: f64
+    planet_id: i32,
+    planets: &[PlanetInput],
 ) -> f64 {
-    // Requires Varga mapping.
-    // Simplified:
-    // In 7 Vargas (D1, D2, D3, D7, D9, D12, D30).
-    // If in Moolatrikona: 45
-    // Own sign: 30
-    // Best Friend: 22.5
-    // Friend: 15
-    // Neutral: 7.5
-    // Enemy: 3.75
-    // Worst Enemy: 1.875 (or 0?)
-    // This requires a Dignity module that accepts Varga positions.
-    // We have `dignity.rs`, need to check if it supports Varga lookups or generic sign-lord relation.
-    // Placeholder: Return average 30.0 for now until integrated.
-    30.0 
+    use crate::vedic::vargas::{calculate_varga_position, VargaType, VargaConfig};
+    use crate::vedic::dignity::{calculate_dignity, get_panchadha_relationship, Dignity};
+    
+    let mut total_bala = 0.0;
+    let target_long = planets.iter().find(|p| p.id == planet_id).map(|p| p.longitude).unwrap_or(0.0);
+    let target_sign = ((target_long / 30.0).floor() as u8 % 12) + 1;
+    
+    // The 7 Vargas for Shadbala: D1, D2, D3, D7, D9, D12, D30
+    let vargas = [
+        VargaType::D1, VargaType::D2, VargaType::D3,
+        VargaType::D7, VargaType::D9, VargaType::D12, VargaType::D30,
+    ];
+    
+    let config = VargaConfig::new();
+    
+    for varga_type in vargas.iter() {
+        let v_pos = calculate_varga_position(target_long, *varga_type, &config);
+        let v_sign = v_pos.sign; // 1-12
+        
+        // 1. Check direct dignity in this Varga sign
+        // Note: For D1, we use full degree precision. 
+        // For other Vargas, we usually treat them as a "sign" and check its Lord.
+        // However, Moolatrikona and Exaltation in Shadbala are often handled by just Sign-Lord relationship
+        // except in D1. 
+        // But the "Moolatrikona" 45-point rule often applies if the planet's sign matches its Moolatrikona sign.
+        
+        // Let's get the lord of the varga sign
+        let lord_id = match v_sign {
+            1 | 8 => 2, // Mars
+            2 | 7 => 5, // Venus
+            3 | 6 => 3, // Mercury
+            4 => 1,     // Moon
+            5 => 0,     // Sun
+            9 | 12 => 4,// Jupiter
+            10 | 11 => 6,// Saturn
+            _ => -1,
+        };
+        
+        // Calculate relationship based on D1 positions
+        // We need the lord's sign in D1
+        let lord_data = planets.iter().find(|p| p.id == lord_id);
+        let lord_sign_d1 = lord_data.map(|p| ((p.longitude / 30.0).floor() as u8 % 12) + 1).unwrap_or(0);
+        
+        let strength = if planet_id == lord_id {
+            // Check if it's Moolatrikona in this Varga sign
+            // Only apply Moolatrikona (45) if it's the specific sign.
+            // Sun: 5, Moon: 2, Mar: 1, Mer: 6, Jup: 9, Ven: 7, Sat: 11
+            let is_moolatrikona = match planet_id {
+                0 => v_sign == 5,
+                1 => v_sign == 2, // Note: Moon's Moolatrikona is Taurus
+                2 => v_sign == 1,
+                3 => v_sign == 6,
+                4 => v_sign == 9,
+                5 => v_sign == 7,
+                6 => v_sign == 11,
+                _ => false,
+            };
+            if is_moolatrikona { 45.0 } else { 30.0 }
+        } else {
+            // Check Five-fold relationship with the lord in D1 positions
+            let dignity = get_panchadha_relationship(planet_id, target_sign, lord_id, lord_sign_d1);
+            match dignity {
+                Dignity::GreatFriend => 22.5,
+                Dignity::Friend => 15.0,
+                Dignity::Neutral => 7.5,
+                Dignity::Enemy => 3.75,
+                Dignity::GreatEnemy => 1.875,
+                _ => 15.0, // Should not happen
+            }
+        };
+        
+        total_bala += strength;
+    }
+    
+    total_bala
 }
 
-fn calculate_sthana_bala(long: f64, planet_id: i32, jd: f64) -> f64 {
+
+fn calculate_sthana_bala(planet_id: i32, planets: &[PlanetInput], jd: f64) -> f64 {
+    let long = planets.iter().find(|p| p.id == planet_id).map(|p| p.longitude).unwrap_or(0.0);
     let uchcha = calculate_uchcha_bala(long, planet_id);
-    let saptavargaja = calculate_saptavargaja_bala(long, planet_id, jd);
+    let saptavargaja = calculate_saptavargaja_bala(planet_id, planets);
     // ... others
     uchcha + saptavargaja 
     // TODO: Add Ojhayugma, Kendra, Drekkana
@@ -337,8 +399,9 @@ pub fn calculate_shadbala_profile(
         let long = p_data.map(|p| p.longitude).unwrap_or(0.0);
         let speed = p_data.map(|p| p.speed).unwrap_or(0.0);
         
-        let sthana = calculate_sthana_bala(long, id, jd);
+        let sthana = calculate_sthana_bala(id, planets, jd);
         let dig = calculate_dig_bala(long, id, ascendant);
+
         let kala = 45.0; // Placeholder
         let chesta = calculate_chesta_bala(id, speed);
         let naisargika = match id {

@@ -58,6 +58,25 @@ impl Sarvashtakavarga {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[wasm_bindgen]
+pub struct PrastaraResult {
+    /// Target Planet ID (0-6)
+    pub planet_id: i32,
+    /// 96 elements (8 rows of ref planets x 12 signs)
+    /// Row 0-6: Sun..Sat, Row 7: Ascendant
+    #[wasm_bindgen(skip)]
+    pub grid: Vec<u8>,
+}
+
+#[wasm_bindgen]
+impl PrastaraResult {
+    #[wasm_bindgen(getter)]
+    pub fn grid(&self) -> Vec<u8> {
+        self.grid.clone()
+    }
+}
+
 // Helper: Get sign index (0-11) from longitude
 fn get_sign(long: f64) -> usize {
     (long / 30.0).floor() as usize % 12
@@ -260,6 +279,37 @@ pub fn calculate_binna_av(
     AshtakavargaResult {
         planet_id: target_planet_id,
         bindus
+    }
+}
+
+/// Calculate Prastara Ashtakavarga (Detailed Contribution Grid)
+pub fn calculate_prastara_av(
+    target_planet_id: i32,
+    planet_positions: &[f64],
+    ascendant: f64
+) -> PrastaraResult {
+    let mut grid = vec![0u8; 96]; // 8 rows * 12 cols
+    
+    for ref_id in 0..=7 {
+        let ref_long = if ref_id == 7 {
+            ascendant
+        } else {
+            planet_positions[ref_id as usize]
+        };
+        
+        let ref_sign = get_sign(ref_long);
+        let points = get_points(target_planet_id, ref_id);
+        
+        for &offset in points.iter() {
+            let target_sign = (ref_sign + (offset as usize) - 1) % 12;
+            // grid[row * 12 + col]
+            grid[(ref_id as usize) * 12 + target_sign] = 1;
+        }
+    }
+
+    PrastaraResult {
+        planet_id: target_planet_id,
+        grid
     }
 }
 

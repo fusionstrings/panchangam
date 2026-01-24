@@ -7,6 +7,7 @@ use crate::swe_bindings;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[wasm_bindgen(getter_with_clone)]
 pub struct PlanetData {
+    pub id: i32,
     pub name: alloc::string::String,
     pub longitude: f64,
     pub latitude: f64,
@@ -76,12 +77,12 @@ pub fn get_planet_positions_bulk(jd: f64, ayanamsha_val: f64) -> alloc::vec::Vec
         let mut sid_lon = pos.longitude - ayanamsha_val;
         if sid_lon < 0.0 { sid_lon += 360.0; }
         
-        raw_positions.push((name, sid_lon % 360.0, pos.latitude, pos.distance, pos.longitude_speed));
+        raw_positions.push((id, name, sid_lon % 360.0, pos.latitude, pos.distance, pos.longitude_speed));
     }
 
-    let sun_lon = raw_positions[0].1;
+    let sun_lon = raw_positions[0].2;
 
-    for (name, lon, lat, dist, speed) in raw_positions {
+    for (id, name, lon, lat, dist, speed) in raw_positions {
         let is_retro = speed < 0.0;
         
         // Combustion logic
@@ -98,10 +99,10 @@ pub fn get_planet_positions_bulk(jd: f64, ayanamsha_val: f64) -> alloc::vec::Vec
             _ => false,
         };
 
-        let sign_index = (lon / 30.0).floor() as u8 + 1;
-        let dignity = crate::vedic::dignity::calculate_dignity(name, sign_index);
+        let dignity = crate::vedic::dignity::calculate_dignity(name, lon);
 
         planets.push(PlanetData {
+            id,
             name: name.to_string(),
             longitude: lon,
             latitude: lat,
@@ -118,6 +119,7 @@ pub fn get_planet_positions_bulk(jd: f64, ayanamsha_val: f64) -> alloc::vec::Vec
     let rahu_lon = planets[rahu_idx].longitude;
     let ketu_lon = (rahu_lon + 180.0) % 360.0;
     planets.push(PlanetData {
+        id: 11,
         name: "Ketu".to_string(),
         longitude: ketu_lon,
         latitude: -planets[rahu_idx].latitude,
