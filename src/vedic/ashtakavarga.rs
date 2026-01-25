@@ -322,8 +322,8 @@ pub fn calculate_sarvashtakavarga(
     
     for planet_id in 0..7 {
         let bav = calculate_binna_av(planet_id, planet_positions, ascendant);
-        for i in 0..12 {
-            totals[i] += bav.bindus[i];
+        for (i, total) in totals.iter_mut().enumerate().take(12) {
+            *total += bav.bindus[i];
         }
     }
     
@@ -469,7 +469,7 @@ pub fn calculate_reductions(
         // Let's assume PID 0..6 for Pinda. For occupancy, maybe 0..6?
         // "If a sign is occupied by a planet".
         // Let's stick to 0..6 for safety unless specifically told Nodes count.
-        if pid < 0 || pid > 6 { continue; }
+        if !(0..=6).contains(&pid) { continue; }
         
         let sign = (long / 30.0).floor() as usize % 12;
         occupancy[sign].push(pid);
@@ -501,7 +501,7 @@ pub fn calculate_reductions(
     
     // Iterate planets and add multiplier if present
     for &(pid, long) in planets.iter() {
-        if pid >= 0 && pid <= 6 {
+        if (0..=6).contains(&pid) {
              let sign = (long / 30.0).floor() as usize % 12;
              // Check if reduced[sign] > 0?
              // "Multiply the REDUCED points of that sign by the Planetary Multiplier."

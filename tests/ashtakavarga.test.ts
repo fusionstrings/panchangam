@@ -1,5 +1,8 @@
-import { assertAlmostEquals, assertEquals } from "@std/assert";
-import { calculate_ashtakavarga, Sarvashtakavarga } from "../lib/panchangam.js";
+import { assertEquals } from "@std/assert";
+import {
+  calculate_ashtakavarga,
+  type Sarvashtakavarga,
+} from "../lib/panchangam.js";
 
 Deno.test("Ashtakavarga: Sarvashtakavarga Calculation", () => {
   // Test Case:

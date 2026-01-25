@@ -45,7 +45,9 @@ console.log("\n2. Reductions & Shodya Pinda (from SAV):");
 // We can run reduction on SAV totals often used for transits,
 // OR run on individual BAVs. Here we show SAV reduction for demo.
 // calculate_reduced_ashtakavarga expects tuples [id, long]
-const planet_tuples = planets.map((p: any) => [p.id, p.longitude]);
+const planet_tuples = planets.map((
+  p: { id: number; longitude: number },
+) => [p.id, p.longitude]);
 const reduced = calculate_reduced_ashtakavarga(sav.totals, planet_tuples);
 console.log("Reduced Bindus:", reduced.reduced_bindus);
 console.log("Shodya Pinda:", reduced.shodaya_pinda);
@@ -66,11 +68,17 @@ console.log("\n4. Special Lagnas:");
 const planets_sunrise = calculate_planets(sunrise_jd, 1);
 // Manually cast or find
 // In JS from WASM, calculate_planets returns array of objects.
-const sun_obj = (planets_sunrise as any[]).find((p: any) => p.id === 0);
+// Helper type for planets
+interface IPlanet {
+  id: number;
+  longitude: number;
+}
+
+const sun_obj = (planets_sunrise as IPlanet[]).find((p) => p.id === 0);
 const sun_sunrise = sun_obj ? sun_obj.longitude : 0;
 
 // Need Moon at Birth
-const moon_obj = (planets as any[]).find((p: any) => p.id === 1);
+const moon_obj = (planets as IPlanet[]).find((p) => p.id === 1);
 const moon_birth = moon_obj ? moon_obj.longitude : 0;
 
 const special_lagnas = calculate_special_lagnas(

@@ -99,6 +99,12 @@ impl VargaConfig {
     }
 }
 
+impl Default for VargaConfig {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Helper to convert i32 to Enum safely
 fn to_d2(val: i32) -> D2Variation {
     match val {
@@ -216,7 +222,7 @@ fn calculate_d2(long: f64, method: D2Variation) -> VargaPosition {
     //            Odd signs  -> Sun(5) first half, Moon(4) second half.
     // 0-15, 15-30
     
-    let is_odd = sign_0 % 2 == 0; // Aries(0) is odd(1)
+    let is_odd = sign_0 % 2 != 0; // Aries(0) is odd(1) -> !even
     let is_first_half = deg < 15.0;
     
     match method {
@@ -530,7 +536,7 @@ fn calculate_d30(long: f64) -> VargaPosition {
     // Odd: 0-5 Mars(0), 5-10 Sat(10), 10-18 Jup(8), 18-25 Merc(2), 25-30 Ven(1)
     // Even: 0-5 Ven(1), 5-12 Merc(2), 12-20 Jup(8), 20-25 Sat(10), 25-30 Mars(0)
     
-    let is_odd = sign_0 % 2 == 0;
+    let is_odd = sign_0 % 2 != 0;
     let target_sign_0 = if is_odd {
         if deg < 5.0 { 0 } // Aries
         else if deg < 10.0 { 10 } // Aquarius

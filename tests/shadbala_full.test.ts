@@ -1,9 +1,5 @@
-import { assertAlmostEquals, assertEquals } from "@std/assert";
-import {
-  calculate_full_shadbala,
-  calculate_planet_strength, // Legacy check
-  ShadbalaProfile,
-} from "../lib/panchangam.js";
+import { assertAlmostEquals } from "@std/assert";
+import { calculate_full_shadbala } from "../lib/panchangam.js";
 
 Deno.test("Shadbala: Full Profile & Drik Bala", () => {
   // Test Setup:

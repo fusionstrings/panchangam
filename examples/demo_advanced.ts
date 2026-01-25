@@ -31,7 +31,7 @@ console.log("\n--- Varga Positions (Navamsha D9) ---");
 // Config: D9 method = 0 (Parashara)
 const d9_config = { d9_method: 0 };
 
-planets.forEach((p) => {
+planets.forEach((p: { name: string; longitude: number; dignity: string }) => {
   // Calculate D9 position
   const varga_pos = calculate_varga(p.longitude, 9, d9_config);
   // Varga sign (1-12)
@@ -45,7 +45,10 @@ console.log("\n--- Shadbala (Strength) ---");
 const shadbala = calculate_full_shadbala(planets, jd, ascendant);
 
 // Helper to print strength
-const print_strength = (name: string, data: any) => {
+const print_strength = (
+  name: string,
+  data: { total_rupas: number; ishta_phala: number; kashta_phala: number },
+) => {
   console.log(
     `${name}: ${data.total_rupas.toFixed(2)} Rupas (Ishta: ${
       data.ishta_phala.toFixed(2)
@@ -64,7 +67,9 @@ print_strength("Saturn", shadbala.saturn);
 // --- 4. Jaimini Karakas ---
 console.log("\n--- Jaimini Charakarakas (7 Karaka Scheme) ---");
 // Jaimini functions expect tuples of [id, longitude]
-const planet_input = planets.map((p: any) => [p.id, p.longitude]);
+const planet_input = planets.map((
+  p: { id: number; longitude: number },
+) => [p.id, p.longitude]);
 const karakas = calculate_jaimini_karakas(planet_input, false); // use_8_karakas = false
 
 const karaka_names = [
@@ -78,7 +83,9 @@ const karaka_names = [
 ];
 karakas.forEach((k) => {
   // Find planet name by ID
-  const p_name = planets.find((p: any) => p.id === k.planet_id)?.name ||
+  const p_name = planets.find((p: { id: number; name: string }) =>
+    p.id === k.planet_id
+  )?.name ||
     "Unknown";
   console.log(`${karaka_names[k.karaka_name] || "Unknown"} Karaka: ${p_name}`);
 });

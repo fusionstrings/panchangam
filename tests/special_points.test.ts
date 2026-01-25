@@ -1,7 +1,4 @@
-import {
-  assertAlmostEquals,
-  assertEquals,
-} from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertAlmostEquals, assertEquals } from "@std/assert";
 import {
   calculate_houses,
   calculate_planets,
@@ -12,14 +9,19 @@ import {
   p_julday,
 } from "../lib/panchangam.js";
 
-Deno.test("Special Lagnas: Hora, Ghati, Sree Lagna", async () => {
+interface TestPlanet {
+  id: number;
+  longitude: number;
+}
+
+Deno.test("Special Lagnas: Hora, Ghati, Sree Lagna", () => {
   // Sample Birth: 1985-04-24 12:00:00 (Local Time)
   // Location: 13.0827 N, 80.2707 E (Chennai)
   // Lahiri Ayanamsha (mode 1)
 
   const lat = 13.0827;
   const lon = 80.2707;
-  const year = 1985, month = 4, day = 24, hour = 12.0;
+  const year = 1985, month = 4, day = 24, _hour = 12.0;
 
   // JD for 12:00 UT
   // Birth at 12:00 Local (IST = UT+5.5) -> UT = 6.5
@@ -35,15 +37,21 @@ Deno.test("Special Lagnas: Hora, Ghati, Sree Lagna", async () => {
 
   // Calculate Sun at Sunrise
   // We need planets at sunrise_jd
-  const plants_at_sunrise = calculate_planets(sunrise_jd, 1) as any[];
-  const sun_sunrise = plants_at_sunrise.find((p: any) => p.id === 0).longitude;
+  const plants_at_sunrise = calculate_planets(
+    sunrise_jd,
+    1,
+  ) as unknown as TestPlanet[];
+  const sun_sunrise = plants_at_sunrise.find((p) => p.id === 0)?.longitude || 0;
 
   // Calculate Lagna and Moon at birth
   const house_info = calculate_houses(birth_jd, lat, lon, "W", 1);
   const lagna = house_info.ascendant;
 
-  const planets_at_birth = calculate_planets(birth_jd, 1) as any[];
-  const moon_birth = planets_at_birth.find((p: any) => p.id === 1).longitude;
+  const planets_at_birth = calculate_planets(
+    birth_jd,
+    1,
+  ) as unknown as TestPlanet[];
+  const moon_birth = planets_at_birth.find((p) => p.id === 1)?.longitude || 0;
 
   const result = calculate_special_lagnas(
     birth_jd,
@@ -73,7 +81,7 @@ Deno.test("Special Lagnas: Hora, Ghati, Sree Lagna", async () => {
   assertAlmostEquals(result.sree_lagna, expected_sl, 0.001);
 });
 
-Deno.test("Prastara Ashtakavarga: Sun", async () => {
+Deno.test("Prastara Ashtakavarga: Sun", () => {
   const planet_longs = [
     { id: 0, longitude: 10.0, speed: 1.0 }, // Sun
     { id: 1, longitude: 40.0, speed: 12.0 }, // Moon

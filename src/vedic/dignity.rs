@@ -188,7 +188,7 @@ pub fn get_naisargika_relationship(p1: i32, p2: i32) -> Relationship {
         },
         6 => match p2 { // Saturn
             3 | 5 => Relationship::PermanentFriend,
-            0 | 1 | 2 => Relationship::PermanentEnemy,
+            0..=2 => Relationship::PermanentEnemy,
             _ => Relationship::Neutral,
         },
         _ => Relationship::Neutral,

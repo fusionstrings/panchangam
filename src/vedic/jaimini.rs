@@ -225,7 +225,7 @@ fn calculate_duration(sign: usize, lord_sign: usize, is_direct: bool) -> i32 {
     } else {
         // Reverse: Sign - Lord
         (sign as i32 - lord_sign as i32 + 12).rem_euclid(12)
-    } as i32;
+    };
     
     // Count is number of signs. 
     // If Count = 0 (same sign) -> Jaimini says 1, but rule says subtract 1.
@@ -318,10 +318,7 @@ pub fn calculate_chara_dasha(
     // 1, 2, 3, 7, 8, 9 -> Direct
     // 4, 5, 6, 10, 11, 12 -> Reverse
     
-    let is_dasha_order_direct = match ascendant_sign {
-        0 | 1 | 2 | 6 | 7 | 8 => true,
-        _ => false
-    };
+    let is_dasha_order_direct = matches!(ascendant_sign, 0 | 1 | 2 | 6 | 7 | 8);
     
     // Logic for sequence generation
     let mut dasha_signs = Vec::new();

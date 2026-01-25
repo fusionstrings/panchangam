@@ -91,9 +91,9 @@ pub fn check_yogas(
     let mut yogas = Vec::new();
     
     // Build context
-    let mut p_longs = vec![0.0; 7];
-    let mut p_signs = vec![0; 7];
-    let mut p_houses = vec![0; 7];
+    let mut p_longs = [0.0; 7];
+    let mut p_signs = [0; 7];
+    let mut p_houses = [0; 7];
     
     // Map existing inputs
     for p in planets {

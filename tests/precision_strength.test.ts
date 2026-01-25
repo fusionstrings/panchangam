@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import {
   calculate_full_shadbala,
-  calculate_planets,
+  // calculate_planets,
 } from "../lib/panchangam.js";
 
 Deno.test("Strength Precision: Moolatrikona Degrees", () => {

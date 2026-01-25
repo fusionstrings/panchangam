@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import {
   calculate_vimshottari,
   calculate_yogini,
-  YoginiInfo,
+  // YoginiInfo,
 } from "../lib/panchangam.js";
 
 Deno.test("Dasha: Yogini Dasha Calculation", () => {

@@ -1,19 +1,5 @@
 import { assertAlmostEquals, assertEquals } from "@std/assert";
-import {
-  calculate_varga,
-  D10Variation,
-  D2Variation,
-  D3Variation,
-  D9Variation,
-  VargaType,
-} from "../lib/panchangam.js";
-
-// Helper to convert deg to Sign/Deg
-function toSignDeg(fullDeg: number) {
-  const s = Math.floor(fullDeg / 30) + 1;
-  const d = fullDeg % 30;
-  return { sign: s, deg: d };
-}
+import { calculate_varga, D3Variation } from "../lib/panchangam.js";
 
 Deno.test("Varga: D1 (Rashi) check", () => {
   // 45 degrees = 15 deg Taurus (Sign 2)
@@ -50,7 +36,7 @@ Deno.test("Varga: D3 (Drekkana) Variations", () => {
   // Sun at 15 deg Aries. (2nd Drekkana).
 
   // Config as plain object or undefined
-  let config: any = { d3_method: D3Variation.Parashara };
+  const config = { d3_method: D3Variation.Parashara };
 
   const pRes = calculate_varga(15.0, 3, config);
   assertEquals(pRes.sign, 5); // Leo

@@ -1,4 +1,4 @@
-import { check_graha_yuddha, swe_julday } from "../lib/panchangam.js";
+import { check_graha_yuddha, p_julday } from "../lib/panchangam.js";
 
 console.log("=".repeat(60));
 console.log(`⚔️  Graha Yuddha (Planetary War) Demo`);
@@ -7,7 +7,7 @@ console.log("=".repeat(60));
 // Test Case: February 22, 2024
 // Venus and Mars were very close.
 const year = 2024, month = 2, day = 22;
-const jd = swe_julday(year, month, day, 12.0, 1);
+const jd = p_julday(year, month, day, 12.0, 1);
 
 console.log(`Checking for date: ${year}-${month}-${day} (JD: ${jd})`);
 const wars = check_graha_yuddha(jd, 1); // Lahiri
@@ -30,7 +30,7 @@ if (Array.isArray(wars) && wars.length > 0) {
 }
 
 // Second Test: A date with no war (today)
-const jd2 = swe_julday(2025, 1, 5, 12.0, 1);
+const jd2 = p_julday(2025, 1, 5, 12.0, 1);
 console.log(`\nChecking for date: 2025-01-05`);
 const wars2 = check_graha_yuddha(jd2, 1);
 if (!wars2 || wars2.length === 0) {

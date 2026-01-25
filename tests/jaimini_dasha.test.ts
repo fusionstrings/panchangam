@@ -1,8 +1,5 @@
 import { assertEquals } from "@std/assert";
-import {
-  calculate_chara_dasha_periods,
-  CharaDashaPeriod,
-} from "../lib/panchangam.js";
+import { calculate_chara_dasha_periods } from "../lib/panchangam.js";
 
 Deno.test("Jaimini: Chara Dasha Calculation", () => {
   // Scenario:

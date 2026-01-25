@@ -5,7 +5,7 @@ import {
   calculate_vimshottari,
   check_graha_yuddha,
   Location,
-  swe_julday,
+  p_julday,
 } from "../lib/panchangam.js";
 
 // 1. Daily Panchang
@@ -51,7 +51,7 @@ console.log(
 
 // 2. Planets & Dignity
 console.log("\n--- Planetary Positions & Dignity ---");
-const jd = swe_julday(
+const jd = p_julday(
   date.getFullYear(),
   date.getMonth() + 1,
   date.getDate(),

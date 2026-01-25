@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { find_active_yogas, YogaResult } from "../lib/panchangam.js";
+import { find_active_yogas } from "../lib/panchangam.js";
 
 Deno.test("Yoga Detection: Hamsa & Budhaditya", () => {
   // Scenario:
@@ -26,7 +26,7 @@ Deno.test("Yoga Detection: Hamsa & Budhaditya", () => {
   console.log("Active Yogas:", yogas);
 
   // Check Hamsa Yoga
-  const hamsa = yogas.find((y: any) => y.name === "Hamsa Yoga");
+  const hamsa = yogas.find((y: { name: string }) => y.name === "Hamsa Yoga");
   assertEquals(
     !!hamsa,
     true,
@@ -34,7 +34,9 @@ Deno.test("Yoga Detection: Hamsa & Budhaditya", () => {
   );
 
   // Check Ruchaka Yoga
-  const ruchaka = yogas.find((y: any) => y.name === "Ruchaka Yoga");
+  const ruchaka = yogas.find((y: { name: string }) =>
+    y.name === "Ruchaka Yoga"
+  );
   assertEquals(
     !!ruchaka,
     true,
@@ -42,7 +44,9 @@ Deno.test("Yoga Detection: Hamsa & Budhaditya", () => {
   );
 
   // Check Budhaditya Yoga
-  const budha = yogas.find((y: any) => y.name === "Budhaditya Yoga");
+  const budha = yogas.find((y: { name: string }) =>
+    y.name === "Budhaditya Yoga"
+  );
   assertEquals(
     !!budha,
     true,

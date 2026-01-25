@@ -3,7 +3,7 @@ import {
   calculate_houses,
   calculate_vimshottari,
   Constants,
-  Location,
+  // Location,
   p_julday,
   tithi_end_time,
   tithi_start_time,
@@ -17,8 +17,8 @@ Deno.test("Dasha: Cycle Wrap-around", () => {
   // Moon at 360.0 (or 0.0) is transition.
 
   // Revati 4th pada end (360 deg) -> End of Mercury Dasha.
-  const moonLong = 359.99; // End of Revati
-  const birthMs = 0; // Epoch
+  const _moonLong = 359.99; // End of Revati
+  const _birthMs = 0; // Epoch
   // 17 years into Mercury dasha means start of Ketu?
   // Let's test basic planet cycle
 

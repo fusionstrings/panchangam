@@ -1,8 +1,5 @@
 import { assertEquals } from "@std/assert";
-import {
-  calculate_reduced_ashtakavarga,
-  ReducedAshtakavarga,
-} from "../lib/panchangam.js";
+import { calculate_reduced_ashtakavarga } from "../lib/panchangam.js";
 
 Deno.test("Ashtakavarga: Reductions (Trikona & Ekadhipatya)", () => {
   // Synthetic Bindus for 12 Signs (Ari..Pis)
