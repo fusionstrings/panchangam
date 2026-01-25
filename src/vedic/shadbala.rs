@@ -157,21 +157,27 @@ fn calculate_saptavargaja_bala(
         let lord_data = planets.iter().find(|p| p.id == lord_id);
         let lord_sign_d1 = lord_data.map(|p| ((p.longitude / 30.0).floor() as u8 % 12) + 1).unwrap_or(0);
         
-        let strength = if planet_id == lord_id {
-            // Check if it's Moolatrikona in this Varga sign
-            // Only apply Moolatrikona (45) if it's the specific sign.
-            // Sun: 5, Moon: 2, Mar: 1, Mer: 6, Jup: 9, Ven: 7, Sat: 11
-            let is_moolatrikona = match planet_id {
-                0 => v_sign == 5,
-                1 => v_sign == 2, // Note: Moon's Moolatrikona is Taurus
-                2 => v_sign == 1,
-                3 => v_sign == 6,
-                4 => v_sign == 9,
-                5 => v_sign == 7,
-                6 => v_sign == 11,
-                _ => false,
-            };
-            if is_moolatrikona { 45.0 } else { 30.0 }
+        // precise mapping for calculate_dignity
+        let p_name = match planet_id {
+            0 => "Sun",
+            1 => "Moon",
+            2 => "Mars",
+            3 => "Mercury",
+            4 => "Jupiter",
+            5 => "Venus",
+            6 => "Saturn",
+            _ => "Sun",
+        };
+        
+        let dig_status = calculate_dignity(p_name, v_pos.full_longitude);
+        
+        let strength = if dig_status == Dignity::Moolatrikona {
+            45.0
+        } else if dig_status == Dignity::OwnSign {
+            30.0
+        } else if planet_id == lord_id {
+             // Fallback for OwnSign if distinct from Dignity check (should match)
+             30.0
         } else {
             // Check Five-fold relationship with the lord in D1 positions
             let dignity = get_panchadha_relationship(planet_id, target_sign, lord_id, lord_sign_d1);
