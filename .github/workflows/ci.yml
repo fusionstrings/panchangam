@@ -51,7 +51,7 @@ jobs:
           echo "WASI_SDK_PATH=$PWD/wasi-sdk-24.0-x86_64-linux" >> $GITHUB_ENV
 
       - name: Run Native Rust Tests
-        run: cargo test --lib -- --test-threads=1
+        run: cargo test -- --test-threads=1
 
       - name: Build WASM
         run: deno task build

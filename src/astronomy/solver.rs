@@ -21,19 +21,29 @@ where
 {
     let mut low_time = start_jd;
     let mut high_time = end_jd;
-    let mut mid_time;
 
-    // Check bounds
-    // We only compute this to ensure we are searching effectively, though binary search
-    // simply narrows the gap.
+    // Verify bracketing
+    let low_val_raw = calculate_value(low_time);
+    let high_val_raw = calculate_value(high_time);
     
-    // Safety check: if gap is too small, return.
-    if (high_time - low_time) < TIME_EPSILON {
-        return Some(low_time);
+    let mut low_val = low_val_raw;
+    let mut high_val = high_val_raw;
+
+    if period > 0.0 {
+        low_val = normalize_relative(low_val, target_value, period);
+        high_val = normalize_relative(high_val, target_value, period);
     }
 
-    for _ in 0..64 { // Max iterations to prevent infinite loop
-        mid_time = (low_time + high_time) / 2.0;
+    let low_diff = low_val - target_value;
+    let high_diff = high_val - target_value;
+
+    // If both are on the same side, we can't binary search
+    if low_diff.signum() == high_diff.signum() {
+        return None; 
+    }
+
+    for _ in 0..64 {
+        let mid_time = (low_time + high_time) / 2.0;
         
         if (high_time - low_time) < TIME_EPSILON {
             return Some(mid_time);
@@ -41,18 +51,34 @@ where
 
         let mut mid_value = calculate_value(mid_time);
         
-        // Unwind wrap-around relative to target
         if period > 0.0 {
             mid_value = normalize_relative(mid_value, target_value, period);
         }
 
-        // Binary search assumes value increases with time (or we handle signs).
-        // Since we normalize relative to target (making target "0" or "center"),
-        // and assuming we are approaching target from below...
-        if mid_value < target_value {
-            low_time = mid_time;
+        // Standard binary search assuming increasing function relative to checks
+        // We know low and high are on opposite sides.
+        // If low < target and high > target:
+        //   if mid < target -> low = mid
+        //   else -> high = mid
+        // If low > target and high < target:
+        //   if mid < target -> high = mid
+        //   else -> low = mid
+        
+        if low_val < target_value {
+            if mid_value < target_value {
+                low_time = mid_time;
+                low_val = mid_value; // Optimization: update known bound val? Not strictly needed for logic
+            } else {
+                high_time = mid_time;
+                // high_val = mid_value; 
+            }
         } else {
-            high_time = mid_time;
+            // low > target (so high must be < target)
+            if mid_value < target_value {
+                high_time = mid_time;
+            } else {
+                low_time = mid_time;
+            }
         }
     }
 
