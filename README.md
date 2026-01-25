@@ -233,6 +233,18 @@ houses.cusps.forEach((cusp, i) => {
 - **`src/astronomy/`**: Swiss Ephemeris wrappers and solvers.
 - **`scripts/build_npm.ts`**: Build script.
 
+### Runnable Examples
+
+You can run the full examples provided in the `examples/` directory:
+
+```bash
+# Advanced Features (Vargas, Shadbala, Jaimini)
+deno run -A examples/demo_advanced.ts
+
+# Ashtakavarga & Special Points
+deno run -A examples/demo_ashtakavarga.ts
+```
+
 ### Testing
 
 Run the verification suite:
