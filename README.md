@@ -121,6 +121,40 @@ planets.forEach((p) => {
 });
 ```
 
+#### Note on ayanamsa application
+
+If you're comparing `calculate_planets(jd, mode)` output to KP / Vedic stacks
+like VedicRishi (`astrologyapi.com`), it's helpful to know how the ayanamsa
+ends up in the returned longitudes:
+
+**Ayanamsa appears to be applied as naive subtraction** — i.e. the returned
+sidereal longitudes match `swe_calc(jd, planet, TROPICAL) − swe_get_ayanamsa(jd)`
+in our testing — rather than via Swiss-Ephemeris's `SEFLG_SIDEREAL` flag,
+which rotates ecliptic coordinates in the ayanamsa reference frame. The two
+agree to first order but differ by ~3–6″ per planet. Naive subtraction matches
+the convention most KP / legacy Vedic software uses, so it is often the
+desired behaviour.
+
+If you specifically want the `SEFLG_SIDEREAL` path, you can call
+`calc_ut(jd, planet, SEFLG_SWIEPH | SEFLG_SPEED | SEFLG_SIDEREAL)` directly,
+but the sidereal mode must be set first. In our testing, calling
+`calculate_planets(jd, mode)` once appears to set the global sidereal mode as
+a side effect, so a subsequent `calc_ut(..., SEFLG_SIDEREAL)` returns
+positions in the expected ayanamsa frame:
+
+```typescript
+import { p_julday, calculate_planets, calc_ut, Constants } from "@fusionstrings/panchangam";
+
+const jd = p_julday(2024, 1, 1, 12.0, 1);
+calculate_planets(jd, 1); // prime sidereal mode (mode 1 = Lahiri)
+
+const flags = Constants.SEFLG_SWIEPH | Constants.SEFLG_SPEED | Constants.SEFLG_SIDEREAL;
+const sun = calc_ut(jd, Constants.SE_SUN, flags); // sidereal Lahiri Sun
+```
+
+These are observations from external testing rather than statements about the
+library's internals; the maintainer is the authoritative source.
+
 ### Muhurat Calculation
 
 Determine auspicious and inauspicious time windows.
